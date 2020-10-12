@@ -8,7 +8,7 @@ Ideas for Project:
   
   - Login System for Users which want to share experience from own cocktails with maybe 	 new ingredient (Picture, Experience, rating)
   
-  -REST API for getting Cocktail information
+  - REST API for getting Cocktail information
 
 Task-Distribution
 
