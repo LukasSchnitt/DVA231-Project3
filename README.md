@@ -4,34 +4,34 @@ Project Web-Development
 Ideas for Project:
 
 - Cocktail DB
-	 - Website for Queries like “Which Cocktail can I make with these ingredients?”
-
-	 - Login System for Users which want to share experience from own cocktails with maybe 	 new ingredient (Picture, Experience, rating)
-
-	-REST API for getting Cocktail information
+  - Website for Queries like “Which Cocktail can I make with these ingredients?”
+  
+  - Login System for Users which want to share experience from own cocktails with maybe 	 new ingredient (Picture, Experience, rating)
+  
+  -REST API for getting Cocktail information
 
 Task-Distribution
 
 - Backend: Francesco, Lukas
 	
-- Query for Ingredients/Cocktails REST API: Lukas  
- [Return JSON-Object with Cocktail-Information]
+ - Query for Ingredients/Cocktails REST API: Lukas  
+ [Return JSON-Object with Cocktail-Information](https://www.thecocktaildb.com/api.php)
 
-- Database and Login: Francesco
+ - Database and Login: Francesco
 
-- Update and ADD own Cocktail Instruction: Francesco
+ - Update and ADD own Cocktail Instruction: Francesco
 
-- Write Review on Cocktail-Recipe:  Francesco
+ - Write Review on Cocktail-Recipe:  Francesco
 
 
 
 - Frontend: Nancy, Ernest
 
-Display-Page: both
+ - Display-Page: both
 
-Login-Page: both
+ - Login-Page: both
 
-Profil-Page: both
+ - Profil-Page: both
 
 
 
@@ -44,5 +44,3 @@ Working-Steps:
 2. REST-API for Query and User Login and methods
 
 3. Frontend 
-
-
