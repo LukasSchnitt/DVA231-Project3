@@ -1,4 +1,4 @@
-# DVA231-Project3
+# DVA231 Project Group 3
 ## Project Web-Development
 
 #### Project Idea: Cocktail DB
