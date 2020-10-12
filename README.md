@@ -4,33 +4,40 @@
 #### Project Idea: Cocktail DB
  - Website for Queries like “Which Cocktail can I make with these ingredients?”
   
- - Login System for Users which want to share experience about cocktails made with known or new recipes (Picture, Experience, rating)
-  
- - REST API for getting Cocktail information
+ - Login System for Users allows them to:
+   - write, edit or remove comments and ratings (1 to 5 stars) about cocktails
+   - add, edit or remove personal cocktails (Pcture, Ingredients, Description, Recipe)
+   - bookmark or unbookmark favourite cocktails
+ 
+ - Login System for Moderators allows them to:
+   - act like normal users
+   - remove other users comments (and the relative ratings)
+   - remove users personal cocktails
+   - blacklist a cocktail from the api
+   - ban or unban users
+   
+ - REST API ["The Cocktail DB"](https://www.thecocktaildb.com/api.php) for getting Cocktail information
 
 #### Task-Distribution
 
-- Backend: Francesco, Lukas
+- Backend: [Francesco](http://github.com/HarlockOfficial), [Lukas](http://github.com/LukasSchnitt)
 	
-  - Query for Ingredients/Cocktails REST API: Lukas  
-    [Return JSON-Object with Cocktail-Information](https://www.thecocktaildb.com/api.php)
+  - Query for Ingredients/Cocktails from REST API and Site DataBase: Lukas
 
-  - Database and Login: Francesco
-
-  - Update and ADD own Cocktail Instruction: Francesco
-
-  - Write Review on Cocktail-Recipe:  Francesco
+  - Database and Users Login System: Francesco
+  
+  - Database and Moderators Login System: __________
 
 
-
-- Frontend: Nancy, Ernest
+- Frontend: [Nancy](https://github.com/Nanny26), [Ernest](github.com/erno98)
 
   - Display-Page: both
 
   - Login-Page: both
 
-  - Profil-Page: both
-
+  - Profile-Page: both
+  
+  - Cocktail-Page (with Picture, Ingredients, Description, Recipe, average of votes and Comments)
 
 
 #### Working-Steps:
