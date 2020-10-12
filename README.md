@@ -15,7 +15,7 @@ Task-Distribution
 - Backend: Francesco, Lukas
 	
 - Query for Ingredients/Cocktails REST API: Lukas  
- [Return JSON-Object which Cocktail-Information]
+ [Return JSON-Object with Cocktail-Information]
 
 - Database and Login: Francesco
 
