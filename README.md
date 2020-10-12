@@ -1,7 +1,7 @@
 # DVA231-Project3
-##Project Web-Development
+## Project Web-Development
 
-####Ideas for Project:
+#### Ideas for Project:
 
 - Cocktail DB
   - Website for Queries like “Which Cocktail can I make with these ingredients?”
@@ -10,7 +10,7 @@
   
   - REST API for getting Cocktail information
 
-####Task-Distribution
+#### Task-Distribution
 
 - Backend: Francesco, Lukas
 	
@@ -35,7 +35,7 @@
 
 
 
-####Working-Steps:
+#### Working-Steps:
 
 1. Django-Introduction
 
