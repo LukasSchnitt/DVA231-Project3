@@ -1,14 +1,12 @@
 # DVA231-Project3
 ## Project Web-Development
 
-#### Project Idea:
-
-- Cocktail DB
-  - Website for Queries like “Which Cocktail can I make with these ingredients?”
+#### Project Idea: Cocktail DB
+ - Website for Queries like “Which Cocktail can I make with these ingredients?”
   
-  - Login System for Users which want to share experience from own cocktails with maybe 	 new ingredient (Picture, Experience, rating)
+ - Login System for Users which want to share experience from own cocktails with maybe 	 new ingredient (Picture, Experience, rating)
   
-  - REST API for getting Cocktail information
+ - REST API for getting Cocktail information
 
 #### Task-Distribution
 
