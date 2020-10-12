@@ -1,7 +1,7 @@
 # DVA231-Project3
 ## Project Web-Development
 
-#### Ideas for Project:
+#### Project Idea:
 
 - Cocktail DB
   - Website for Queries like “Which Cocktail can I make with these ingredients?”
