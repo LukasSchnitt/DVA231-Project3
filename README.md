@@ -42,3 +42,12 @@
 3. REST-API for Query and User Login and methods
 
 4. Frontend 
+
+
+// after meeting with Philip:
+Cocktail Receipes
+bookmark
+review = 1-5 and comment
+admin page - remove reviews comments/cocktails and users, able to block cocktails from the api
+
+profile- username, bookmarks, added cocktails, able to edit/remove their cocktails
