@@ -26,7 +26,7 @@
 
   - Database and Users Login System: Francesco
   
-  - Database and Moderators Login System: __________
+  - Moderators Login System: Francesco
 
 
 - Frontend: [Nancy](https://github.com/Nanny26), [Ernest](github.com/erno98)
