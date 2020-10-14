@@ -2,10 +2,17 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import User, BookmarkedCocktail
+# from .models import User, BookmarkedCocktail
 from .serializers import UserSerializer, BookmarkSerializer
 import hashlib
+# -----------------------------------------------------
+import requests
+import json
+import sys
+from .models import *
 
+
+# ---------------------------------------------------
 
 # Create your views here.
 def home(request):
@@ -21,6 +28,8 @@ def home(request):
     @param id -> cocktail id form the REST API
     @returns -> dictionary containing 'id', 'image', 'name', 'average'
 '''
+
+
 def get_cocktail_from_api_by_id(id):
     out = {
         'id': id
@@ -32,6 +41,8 @@ def get_cocktail_from_api_by_id(id):
     @param id -> cocktail id form the DataBase
     @returns -> dictionary containing 'id', 'image', 'name', 'average'
 '''
+
+
 def get_cocktail_from_db_by_id(id):
     out = {
         'id': id
@@ -45,7 +56,7 @@ def bookmark(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':  # get bookmark
         try:
-            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id'])\
+            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id']) \
                 .values('cocktail_id', 'is_personal_cocktail')
             response = {}
             index = 0
@@ -118,3 +129,44 @@ def user(request):
         except User.DoesNotExist:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         return Response(status=status.HTTP_200_OK)
+
+
+# ----------------------------------------------------------------------------------
+
+
+# response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita")
+
+# response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=gin")
+# object1 = response.json()
+# response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=lemon")
+# object2 = response.json()
+
+
+def get_cocktailbyingredients(ingredient):
+    # Use https://www.thecocktaildb.com/api/json/v1/1/filter.php?i='ingredient' for get possible Cocktails
+    # Send Back JSON with list of Cocktails containing (Cocktailname, Picture, Ingredients, Recipe, ID)
+    json_template = {"cocktails": []}
+    cocktail_template = {"name": "", "picture": "", "id": ""}
+
+    api_url = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + str(ingredient)
+
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + str(ingredient))
+
+    data = response.json()
+
+    for cocktail in data["drinks"]:
+        cocktail_template["name"] = cocktail["strDrink"]
+        cocktail_template["picture"] = cocktail["strDrinkThumb"]
+        cocktail_template["id"] = cocktail["idDrink"]
+        json_template["cocktails"].append(cocktail_template.copy())
+    return json.dumps(json_template)
+
+
+def get_database_cocktails(ingredient):
+    result1 = IngredientsList.objects.filter(name=ingredient)
+    print(result1)
+
+
+def test(request):
+    get_database_cocktails("ingredient1")
+    return HttpResponse("done")
