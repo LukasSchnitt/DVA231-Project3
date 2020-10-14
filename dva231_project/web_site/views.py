@@ -2,8 +2,8 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import User
-from .serializers import UserSerializer
+from .models import User, BookmarkedCocktail
+from .serializers import UserSerializer, BookmarkSerializer
 import hashlib
 
 
@@ -17,9 +17,38 @@ def home(request):
     return HttpResponse("Hello World")
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST', 'DELETE'])
 def bookmark(request):
-    pass
+    if not ('is_logged_in' in request.session and 'id' in request.session and request.session['is_logged_in']):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'GET':  # get bookmark
+        try:
+            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id'])
+            return Response(data=user_bookmarks.values('cocktail_id', 'is_personal_cocktail'))
+        except BookmarkedCocktail.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'POST':  # add bookmark
+        data_for_serializer = {
+            'user_id': request.session['id'],
+            'cocktail_id': request.data['cocktail_id'],
+            'is_personal_cocktail': request.data['is_personal_cocktail']
+        }
+        serializer = BookmarkSerializer(data=data_for_serializer)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':  # remove bookmark
+        try:
+            bookmark_to_eliminate = BookmarkedCocktail.objects.get(
+                user_id=request.session['id'],
+                cocktail_id=request.data['cocktail_id'],
+                is_personal_cocktail=request.data['is_personal_cocktail']
+            )
+            bookmark_to_eliminate.delete()
+        except BookmarkedCocktail.DoesNotExist:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
