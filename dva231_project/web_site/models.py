@@ -14,6 +14,7 @@ class IngredientsList(models.Model):
 
 
 class PersonalCocktail(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
     picture = models.CharField(max_length=25)
