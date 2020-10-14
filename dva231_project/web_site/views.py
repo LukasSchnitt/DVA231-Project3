@@ -17,6 +17,11 @@ def home(request):
     return HttpResponse("Hello World")
 
 
+@api_view(['GET', 'POST'])
+def bookmark(request):
+    pass
+
+
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 def user(request):
     if request.method == 'POST':  # login
