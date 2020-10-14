@@ -23,8 +23,13 @@ def bookmark(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':  # get bookmark
         try:
-            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id'])
-            return Response(data=user_bookmarks.values('cocktail_id', 'is_personal_cocktail'))
+            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id']).values('cocktail_id', 'is_personal_cocktail')
+            for row in user_bookmarks:
+                if row['is_personal_cocktail']:
+                    pass
+                else:
+                    pass
+            return Response(data=user_bookmarks)
         except BookmarkedCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':  # add bookmark
