@@ -8,13 +8,16 @@ import hashlib
 # -----------------------------------------------------
 import requests
 import json
-import sys
 from .models import *
-
 
 # ---------------------------------------------------
 
 # Create your views here.
+'''
+    just for testing purposes, needs to be changed in future
+'''
+
+
 def home(request):
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
@@ -25,29 +28,57 @@ def home(request):
 
 
 '''
-    @param id -> cocktail id form the REST API
-    @returns -> dictionary containing 'id', 'image', 'name', 'average'
+    @param cocktail_id : integer cocktail id form the REST API
+    @returns             dictionary containing 'id'=@param id, 'is_personal_cocktail'=False, 'image', 'name', 'average'
 '''
 
 
-def get_cocktail_from_api_by_id(id):
+def get_cocktail_from_api_by_id(cocktail_id):
     out = {
-        'id': id
+        'id': cocktail_id,
+        'is_personal_cocktail': False
     }
     return out
 
 
 '''
-    @param id -> cocktail id form the DataBase
-    @returns -> dictionary containing 'id', 'image', 'name', 'average'
+    @param cocktail_id : integer cocktail id form the DataBase
+    @returns             dictionary containing 'id'=@param id, 'is_personal_cocktail'=True, 'image', 'name', 'average'
 '''
 
 
-def get_cocktail_from_db_by_id(id):
+def get_cocktail_from_db_by_id(cocktail_id):
     out = {
-        'id': id
+        'id': cocktail_id,
+        'is_personal_cocktail': True
     }
     return out
+
+
+'''
+    user must be logged to use this api, otherwise
+        @returns HTTP STATUS 401
+    Allowed Request Methods:
+        - GET : used to get the list of bookmarked cocktail that a user have 
+            @returns HTTP STATUS 404 if user has no bookmarked cocktails
+            @returns dictionary rendered as json containing all the cocktail bookmarked by a user
+                        every element in the dictionary contains  
+                        <int>:'id', <boolean>:'is_personal_cocktail', <url>:'image', <string>:'name', <double>:'average'
+        - POST : used to add a new cocktail in the user bookmarks
+            @param cocktail_id : integer unique identifier of a cocktail
+            @param is_personal_cocktail : boolean 
+                                                True if cocktail comes from the database
+                                                False if cocktail comes from the REST API
+            @returns HTTP STATUS 200    if cocktail has been added
+            @returns HTTP STATUS 400    if @params are not valid
+        - DELETE : used to remove a cocktail from the user bookmarks
+            @param cocktail_id : integer unique identifier of a cocktail
+            @param is_personal_cocktail : boolean 
+                                                True if cocktail comes from the database
+                                                False if cocktail comes from the REST API
+            @returns HTTP STATUS 200    if cocktail has been removed
+            @returns HTTP STATUS 401    if @params are not valid
+'''
 
 
 @api_view(['GET', 'POST', 'DELETE'])
@@ -88,14 +119,45 @@ def bookmark(request):
                 is_personal_cocktail=request.data['is_personal_cocktail']
             )
             bookmark_to_eliminate.delete()
+            return Response(status=status.HTTP_200_OK)
         except BookmarkedCocktail.DoesNotExist:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return Response(status=status.HTTP_200_OK)
+
+
+'''
+    Allowed Request Methods:
+        - GET : used to logout
+            @returns HTTP STATUS 200 if user is correctly logged out
+            @returns HTTP STATUS 400 if user is not logged in
+        - POST : used to login
+            @param username : string
+            @param password : string (possibly encrypt the password on the client-side before sending it)
+            @returns HTTP STATUS 200 : if user is correctly logged in
+            @returns HTTP STATUS 403 : if user is banned
+            @returns HTTP STATUS 404 : if the credentials are invalid or the user is not registered
+        - PUT : used to register
+            @param username : string
+            @param password : string (possibly encrypt the password on the client-side before sending it)
+            @returns HTTP STATUS 201 : if user is correctly registered
+            @returns HTTP STATUS 400 : if the credentials are invalid
+        - DELETE : used to remove a user
+            @param username : string
+            @param password : string (possibly encrypt the password on the client-side before sending it)
+            @returns HTTP STATUS 200 : if user is correctly deleted
+            @returns HTTP STATUS 401 : if the credentials are invalid or the user is not registered
+'''
 
 
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 def user(request):
-    if request.method == 'POST':  # login
+    if request.method == 'GET':  # logout
+        if 'is_logged_in' in request.session and request.session['is_logged_in']:
+            del request.session['is_logged_in']
+            del request.session['is_moderator']
+            del request.session['id']
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'POST':  # login
         try:
             pwd = hashlib.sha256(request.data['password'].encode()).hexdigest()
             user_login = User.objects.get(username=request.data['username'], password=pwd)
@@ -104,16 +166,9 @@ def user(request):
             request.session['is_logged_in'] = True
             request.session['is_moderator'] = user_login.is_moderator
             request.session['id'] = user_login.id
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return Response(status=status.HTTP_200_OK)
-    elif request.method == 'GET':  # logout
-        if 'is_logged_in' in request.session and request.session['is_logged_in']:
-            del request.session['is_logged_in']
-            del request.session['is_moderator']
-            del request.session['id']
             return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'PUT':  # register
         request.data['password'] = hashlib.sha256(request.data['password'].encode()).hexdigest()
         serializer = UserSerializer(data=request.data)
@@ -126,13 +181,13 @@ def user(request):
             pwd = hashlib.sha256(request.data['password'].encode()).hexdigest()
             user_to_eliminate = User.objects.get(username=request.data['username'], password=pwd)
             user_to_eliminate.delete()
+            return Response(status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return Response(status=status.HTTP_200_OK)
 
 
 # ----------------------------------------------------------------------------------
-
+# from now, testing part
 
 # response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita")
 
@@ -142,7 +197,7 @@ def user(request):
 # object2 = response.json()
 
 
-def get_cocktailbyingredients(ingredient):
+def get_cocktail_by_ingredients(ingredient):
     # Use https://www.thecocktaildb.com/api/json/v1/1/filter.php?i='ingredient' for get possible Cocktails
     # Send Back JSON with list of Cocktails containing (Cocktailname, Picture, Ingredients, Recipe, ID)
     json_template = {"cocktails": []}
