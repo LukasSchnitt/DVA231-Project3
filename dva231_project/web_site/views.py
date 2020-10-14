@@ -17,19 +17,45 @@ def home(request):
     return HttpResponse("Hello World")
 
 
+'''
+    @param id -> cocktail id form the REST API
+    @returns -> dictionary containing 'id', 'image', 'name', 'average'
+'''
+def get_cocktail_from_api_by_id(id):
+    out = {
+        'id': id
+    }
+    return out
+
+
+'''
+    @param id -> cocktail id form the DataBase
+    @returns -> dictionary containing 'id', 'image', 'name', 'average'
+'''
+def get_cocktail_from_db_by_id(id):
+    out = {
+        'id': id
+    }
+    return out
+
+
 @api_view(['GET', 'POST', 'DELETE'])
 def bookmark(request):
     if not ('is_logged_in' in request.session and 'id' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':  # get bookmark
         try:
-            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id']).values('cocktail_id', 'is_personal_cocktail')
+            user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id'])\
+                .values('cocktail_id', 'is_personal_cocktail')
+            response = {}
+            index = 0
             for row in user_bookmarks:
                 if row['is_personal_cocktail']:
-                    pass
+                    response[index] = get_cocktail_from_api_by_id(row['cocktail_id'])
                 else:
-                    pass
-            return Response(data=user_bookmarks)
+                    response[index] = get_cocktail_from_db_by_id(row['cocktail_id'])
+                index += 1
+            return Response(data=response)
         except BookmarkedCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':  # add bookmark
