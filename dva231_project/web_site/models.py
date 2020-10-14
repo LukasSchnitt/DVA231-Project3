@@ -19,6 +19,7 @@ class PersonalCocktail(models.Model):
     description = models.CharField(max_length=500)
     picture = models.CharField(max_length=25)
     recipe = models.TextField()
+    average = models.FloatField(default=None)
 
 
 class CocktailIngredients(models.Model):
@@ -29,8 +30,7 @@ class CocktailIngredients(models.Model):
 
 class Review(models.Model):
     class RatingValue(models.IntegerChoices):
-        BAD = 0
-        NOT_THAT_BAD = 1
+        BAD = 1
         OK = 2
         GOOD = 3
         AWESOME = 4
