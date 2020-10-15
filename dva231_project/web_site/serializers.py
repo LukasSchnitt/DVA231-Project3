@@ -51,3 +51,21 @@ class ReviewSerializer(serializers.ModelSerializer):
         instance.comment = validated_data.get('comment', instance.comment)
         instance.save()
         return instance
+
+
+class PersonalCocktailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonalCocktail
+        fields = ['user_id', 'name', 'description', 'picture', 'recipe']
+
+    def create(self, validated_data):
+        return PersonalCocktail.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.user_id = validated_data.get('user_id', instance.user_id)
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.picture = validated_data.get('picture', instance.picture)
+        instance.recipe = validated_data.get('recipe', instance.recipe)
+        instance.save()
+        return instance
