@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 # from .models import User, BookmarkedCocktail
-from .serializers import UserSerializer, BookmarkSerializer
+from .serializers import UserSerializer, BookmarkSerializer, ReviewSerializer
 import hashlib
 # -----------------------------------------------------
 import requests
@@ -25,6 +25,97 @@ def home(request):
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         return HttpResponse("Hello Logged in")
     return HttpResponse("Hello World")
+
+
+'''
+    Allowed Request Methods:
+        - GET : used to retrieve all reviews of a cocktail
+            @param cocktail_id : integer unique id of the cocktail
+            @param is_personal_cocktail : boolean
+                                          True if cocktail comes from the DataBase
+                                          False if cocktail comes from the Cocktail DB REST API
+            @returns HTTP STATUS 404 if there are no reviews for the cocktail
+            @returns a json containing all the reviews for that cocktail
+                        every element of the json contains 
+                            'id' : integer unique identifier of the review
+                            'user_id' : integer unique identifier of the user
+                            'rating' : double
+                            'comment' : string (maximum 500 characters)
+    Allowed Request Methods if Logged in:
+        - POST : used to add a new review
+            @param cocktail_id : integer unique identifier of the cocktail
+            @param is_personal_cocktail : boolean
+                                          True if cocktail comes from the DataBase
+                                          False if cocktail comes from the Cocktail DB REST API
+            @param rating : double value from 1 to 5
+            @param comment : string (maximum 500 characters)
+            @returns HTTP STATUS 201 if review has been added correctly
+            @returns HTTP STATUS 400 if data are not valid
+        - PUT : used to edit an existing review
+            @param id : integer unique identifier of the comment
+            depending on what have to be changed one or both of:
+                @param rating : double from 1 to 5
+                @param comment : string (maximum 500 characters)
+            @returns HTTP STATUS 200 if the review has been changed correctly
+            @returns HTTP STATUS 400 if data are not changed
+            @returns HTTP STATUS 404 if data are not valid
+        - DELETE : use to delete an existing review
+            @param id : integer unique identifier of the review
+            @returns HTTP STATUS 200 if the review has been deleted successfully
+            @returns HTTP STATUS 404 if the data are not valid
+    If try to POST, PUT or DELETE when not logged in:
+        @returns HTTP STATUS 401
+'''
+
+
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+def review(request):
+    if request.method == 'GET':
+        try:
+            cocktail_reviews = Review.objects.filter(cocktail_id=request.GET['cocktail_id'],
+                                                    is_personal_cocktail=request.GET['is_personal_cocktail'])\
+                .values('id', 'user_id', 'rating', 'comment')
+            return Response(data=cocktail_reviews)
+        except Review.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    if not ('is_logged_in' in request.session and 'id' in request.session and request.session['is_logged_in']):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'POST':
+        data_for_serializer = {
+            'user_id': request.session['id'],
+            'cocktail_id': request.data['cocktail_id'],
+            'is_personal_cocktail': request.data['is_personal_cocktail'],
+            'rating': request.data['rating'],
+            'comment': request.data['comment']
+        }
+        serializer = ReviewSerializer(data=data_for_serializer)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PUT':
+        try:
+            user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
+            changed = False
+            if 'rating' in request.data:
+                user_review.rating = request.data['rating']
+                changed = True
+            if 'comment' in request.data:
+                user_review.comment = request.data['comment']
+                changed = True
+            if changed:
+                user_review.save()
+                return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Review.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'DELETE':
+        try:
+            user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
+            user_review.delete()
+            return Response(status=status.HTTP_200_OK)
+        except Review.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 '''
