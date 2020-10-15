@@ -3,8 +3,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 # from .models import User, BookmarkedCocktail
-from .serializers import UserSerializer, BookmarkSerializer, ReviewSerializer
+from .serializers import UserSerializer, BookmarkSerializer, ReviewSerializer, PersonalCocktailSerializer
 import hashlib
+from datetime import datetime
+import base64
+import os
 # -----------------------------------------------------
 import requests
 import json
@@ -25,6 +28,81 @@ def home(request):
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         return HttpResponse("Hello Logged in")
     return HttpResponse("Hello World")
+
+
+'''
+'''
+
+
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
+def personal_cocktail(request):
+    if not ('is_logged_in' in request.session and request.session['is_logged_in']):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'GET':  # get personal cocktail
+        try:
+            if 'is_moderator' in request.session and request.session['is_moderator']:
+                cocktail_list = PersonalCocktail.objects.all().values()
+            else:
+                cocktail_list = PersonalCocktail.objects.filter(user_id=request.session['id']).values()
+            return Response(data=cocktail_list)
+        except PersonalCocktail.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'POST':  # create a new cocktail
+        now = datetime.now()
+        imgurl = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
+            + str(now.minute) + str(now.second) + str(now.microsecond) + '.' + request.data['extension']
+        data_for_serializer = {
+            'user_id': request.session['id'],
+            'name': request.data['name'],
+            'description': request.data['description'],
+            'picture': imgurl,
+            'recipe': request.data['recipe']
+        }
+        serializer = PersonalCocktailSerializer(data=data_for_serializer)
+        if serializer.is_valid():
+            with open("static/img/cocktail/" + request.session['id'] + '/' + imgurl, "wb") as f:
+                f.write(base64.decodebytes(request.data['img']))
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PATCH':  # edit an existing cocktail
+        try:
+            cocktail_to_edit = PersonalCocktail.objects.get(id=request.data['cocktail_id'], user_id=request.session['id'])
+            edited = False
+            if 'name' in request.data:
+                edited = True
+                cocktail_to_edit.name = request.data['name']
+            if 'description' in request.data:
+                edited = True
+                cocktail_to_edit.description = request.data['description']
+            if 'recipe' in request.data:
+                edited = True
+                cocktail_to_edit.recipe = request.data['recipe']
+            if 'img' in request.data and 'extension' in request.data:
+                edited = True
+                os.remove("static/img/cocktail/" + request.session['id'] + '/' + cocktail_to_edit.picture)
+                now = datetime.now()
+                imgurl = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
+                         + str(now.minute) + str(now.second) + str(now.microsecond) + request.data['extension']
+                with open("static/img/cocktail/" + request.session['id'] + '/' + imgurl, "wb") as f:
+                    f.write(base64.decodebytes(request.data['img']))
+                cocktail_to_edit.picture = imgurl
+            if edited:
+                cocktail_to_edit.save()
+                return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except PersonalCocktail.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'DELETE':  # remove a cocktail
+        try:
+            if 'is_moderator' in request.session and request.session['is_moderator'] and 'cocktail_id' in request.data:
+                user_cocktail = PersonalCocktail.objects.get(id=request.data['cocktail_id'])
+            else:
+                user_cocktail = PersonalCocktail.objects.get(id=request.data['id'], user_id=request.session['id'])
+            user_cocktail.delete()
+            return Response(status=status.HTTP_200_OK)
+        except PersonalCocktail.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 
 '''
@@ -51,7 +129,7 @@ def home(request):
             @param comment : string (maximum 500 characters)
             @returns HTTP STATUS 201 if review has been added correctly
             @returns HTTP STATUS 400 if data are not valid
-        - PUT : used to edit an existing review
+        - PATCH : used to edit an existing review
             @param id : integer unique identifier of the comment
             depending on what have to be changed one or both of:
                 @param rating : double from 1 to 5
@@ -60,7 +138,11 @@ def home(request):
             @returns HTTP STATUS 400 if data are not changed
             @returns HTTP STATUS 404 if data are not valid
         - DELETE : use to delete an existing review
-            @param id : integer unique identifier of the review
+            if the user is a moderator:
+                @param review_id : integer unique identifier of the review 
+                                        (if this parameter is not given then a normal DELETE will be done)
+            else:
+                @param id : integer unique identifier of the review
             @returns HTTP STATUS 200 if the review has been deleted successfully
             @returns HTTP STATUS 404 if the data are not valid
     If try to POST, PUT or DELETE when not logged in:
@@ -68,12 +150,12 @@ def home(request):
 '''
 
 
-@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def review(request):
     if request.method == 'GET':
         try:
             cocktail_reviews = Review.objects.filter(cocktail_id=request.GET['cocktail_id'],
-                                                    is_personal_cocktail=request.GET['is_personal_cocktail'])\
+                                                     is_personal_cocktail=request.GET['is_personal_cocktail']) \
                 .values('id', 'user_id', 'rating', 'comment')
             return Response(data=cocktail_reviews)
         except Review.DoesNotExist:
@@ -93,7 +175,7 @@ def review(request):
             serializer.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'PUT':
+    elif request.method == 'PATCH':
         try:
             user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
             changed = False
@@ -111,7 +193,10 @@ def review(request):
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'DELETE':
         try:
-            user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
+            if 'is_moderator' in request.session and request.session['is_moderator'] and 'review_id' in request.data:
+                user_review = Review.objects.get(id=request.data['review_id'])
+            else:
+                user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
             user_review.delete()
             return Response(status=status.HTTP_200_OK)
         except Review.DoesNotExist:
@@ -217,7 +302,13 @@ def bookmark(request):
 
 '''
     Allowed Request Methods:
-        - GET : used to logout
+        - GET : used to retrieve the complete user list (works only for moderators)
+            @returns HTTP STATUS 404 if user list is empty (impossible)
+            @returns a json containing all the users
+                        every element in the json list contains:
+                            id : integer unique identifier of the user
+                            username : string 
+        - HEAD : used to logout
             @returns HTTP STATUS 200 if user is correctly logged out
             @returns HTTP STATUS 400 if user is not logged in
         - POST : used to login
@@ -232,16 +323,32 @@ def bookmark(request):
             @returns HTTP STATUS 201 : if user is correctly registered
             @returns HTTP STATUS 400 : if the credentials are invalid
         - DELETE : used to remove a user
-            @param username : string
-            @param password : string (possibly encrypt the password on the client-side before sending it)
-            @returns HTTP STATUS 200 : if user is correctly deleted
-            @returns HTTP STATUS 401 : if the credentials are invalid or the user is not registered
+            if user is moderator:
+                @param id : integer unique identifier of the user 
+                                    (if this parameter is missing then a normal delete will be done)
+                @returns HTTP STATUS 200 : if user banned status is correctly switched
+                                                (if user was banned, now is not banned, 
+                                                otherwise the opposite effect is triggered)
+                @returns HTTP STATUS 401 : if the data are invalid or the user is not registered
+            else:
+                @param username : string
+                @param password : string (possibly encrypt the password on the client-side before sending it)
+                @returns HTTP STATUS 200 : if user is correctly deleted
+                @returns HTTP STATUS 401 : if the credentials are invalid or the user is not registered
+    If a different method is used:
+        @returns HTTP STATUS 409
 '''
 
 
-@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@api_view(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
 def user(request):
-    if request.method == 'GET':  # logout
+    if request.method == 'GET' and 'is_moderator' in request.session and request.session['is_moderator']:
+        try:
+            user_list = User.objects.all().values('id', 'username')
+            return Response(data=user_list)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'HEAD':  # logout
         if 'is_logged_in' in request.session and request.session['is_logged_in']:
             del request.session['is_logged_in']
             del request.session['is_moderator']
@@ -269,12 +376,19 @@ def user(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':  # remove account
         try:
-            pwd = hashlib.sha256(request.data['password'].encode()).hexdigest()
-            user_to_eliminate = User.objects.get(username=request.data['username'], password=pwd)
-            user_to_eliminate.delete()
+            if 'is_moderator' in request.session and request.session['is_moderator'] and 'id' in request.data:
+                user_to_eliminate = User.objects.get(id=request.data['id'])
+                user_to_eliminate.is_banned = not user_to_eliminate.is_banned
+                user_to_eliminate.save()
+            else:
+                pwd = hashlib.sha256(request.data['password'].encode()).hexdigest()
+                user_to_eliminate = User.objects.get(username=request.data['username'], password=pwd)
+                user_to_eliminate.delete()
             return Response(status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return Response(status=status.HTTP_409_CONFLICT)
 
 
 # ----------------------------------------------------------------------------------

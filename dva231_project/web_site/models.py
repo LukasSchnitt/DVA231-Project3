@@ -19,7 +19,6 @@ class PersonalCocktail(models.Model):
     description = models.CharField(max_length=500)
     picture = models.CharField(max_length=25)
     recipe = models.TextField()
-    average = models.FloatField(default=None)
 
 
 class CocktailIngredients(models.Model):
