@@ -6,7 +6,7 @@
   
  - Login System for Users allows them to:
    - write, edit or remove comments and ratings (1 to 5 stars) about cocktails
-   - add, edit or remove personal cocktails (Pcture, Ingredients, Description, Recipe)
+   - add, edit or remove personal cocktails (Picture, Ingredients, Description, Recipe)
    - bookmark or unbookmark favourite cocktails
  
  - Login System for Moderators allows them to:
