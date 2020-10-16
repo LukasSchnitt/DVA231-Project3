@@ -69,3 +69,33 @@ class PersonalCocktailSerializer(serializers.ModelSerializer):
         instance.recipe = validated_data.get('recipe', instance.recipe)
         instance.save()
         return instance
+
+
+class IngredientsListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IngredientsList
+        fields = ['name']
+
+    def create(self, validated_data):
+        return IngredientsList.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+        return instance
+
+
+class CocktailIngredientsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CocktailIngredients
+        fields = ['cocktail_id', 'ingredient_id', 'centiliters']
+
+    def create(self, validated_data):
+        return CocktailIngredients.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.cocktail_id = validated_data.get('cocktail_id', instance.cocktail_id)
+        instance.ingredient_id = validated_data.get('ingredient_id', instance.ingredient_id)
+        instance.centiliters = validated_data.get('centiliters', instance.centiliters)
+        instance.save()
+        return instance
