@@ -42,9 +42,9 @@ def personal_cocktail(request):
     if request.method == 'GET':  # get personal cocktail
         try:
             if 'is_moderator' in request.session and request.session['is_moderator']:
-                out = user_cocktail(None)
+                out = user_cocktails(None)
             else:
-                out = user_cocktail(request.session['id'])
+                out = user_cocktails(request.session['id'])
             return Response(data=out)
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -277,14 +277,15 @@ def get_cocktail_from_api_by_id(id):
     cocktail_template = {"name": "", "picture": "", "id": ""}
     response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(id))
     try:
-            response = response.json()
+        data = response.json()
     except ValueError:
         return []
     cocktail_data = data["drinks"][0]
     cocktail_template["name"] = cocktail_data["strDrink"]
     cocktail_template["picture"] = cocktail_data["strDrinkThumb"]
     cocktail_template["id"] = id
-    if(Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == False):
+    if (Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"])
+            .values('is_personal_cocktail') == False):
         cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
     return cocktail_template
 
@@ -297,17 +298,17 @@ def get_cocktail_from_api_by_id(id):
 
 def get_cocktail_from_db_by_id(id):
     cocktail_template = {"name": "", "picture": "", "id": ""}
-    if(PersonalCocktail.objects.filter(cocktail_id=id).exists()):
+    if (PersonalCocktail.objects.filter(cocktail_id=id).exists()):
         cocktail = PersonalCocktail.objects.filter(cocktail_id=id)[0]
         cocktail_template["name"] = cocktail.name
         cocktail_template["picture"] = cocktail.picture
         cocktail_template["id"] = id
-        if(Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
+        if (Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(
+                cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
             cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
         return cocktail_template
     else:
         return {}
-    return out
 
 
 '''
@@ -484,44 +485,51 @@ def get_cocktail_from_API(ingredient_list):
         except ValueError:
             continue
         for cocktail in data["drinks"]:
-            if(CocktailBlacklist.objects.filter(cocktail_id = cocktail["idDrink"]).exists()):
+            if (CocktailBlacklist.objects.filter(cocktail_id=cocktail["idDrink"]).exists()):
                 continue
             cocktail_template = {"name": "", "picture": "", "id": ""}
             cocktail_template["name"] = cocktail["strDrink"]
             cocktail_template["picture"] = cocktail["strDrinkThumb"]
             cocktail_template["id"] = cocktail["idDrink"]
-            if(Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == False):
-                cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
-            if(cocktail_template not in json_template):
+            if (Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
+                    cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == False):
+                cocktail_template["rating"] = \
+                    Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
+            if (cocktail_template not in json_template):
                 json_template.append(cocktail_template.copy())
     return json_template
 
+
 def get_cocktail_from_DB(ingredient_list):
     json_template = []
-    cocktail_template = {"name": "", "picture": "", "id": "", "user" : ""}
+    cocktail_template = {"name": "", "picture": "", "id": "", "user": ""}
 
     for ingredient in ingredient_list:
-        if(IngredientsList.objects.filter(name=str(ingredient)).exists()):
+        if (IngredientsList.objects.filter(name=str(ingredient)).exists()):
             ingredient_object = IngredientsList.objects.filter(name=str(ingredient))[0]
-        else: continue
-        
+        else:
+            continue
+
         for cocktail in PersonalCocktail.objects.all():
             cocktail_template = {"name": "", "picture": "", "id": ""}
-            if(ingredient_object in cocktail.ingredients.all()):
+            if (ingredient_object in cocktail.ingredients.all()):
                 cocktail_template["name"] = cocktail.name
                 cocktail_template["picture"] = cocktail.picture
                 cocktail_template["id"] = cocktail.id
                 cocktail_template["user"] = cocktail.user_id.username
-                if(Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
-                    cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
-                if(cocktail_template not in json_template):
+                if (Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
+                        cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
+                    cocktail_template["rating"] = \
+                        Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
+                if (cocktail_template not in json_template):
                     json_template.append(cocktail_template.copy())
     return json_template
 
+
 def cocktail_information(id):
-    cocktail_template = {"name": "", "picture": "", "id": "", "description" : "", "recipe" : "", "user" : ""}
+    cocktail_template = {"name": "", "picture": "", "id": "", "description": "", "recipe": "", "user": ""}
     ingredients = {}
-    if(PersonalCocktail.objects.filter(id=id).exists()):
+    if (PersonalCocktail.objects.filter(id=id).exists()):
         cocktail = PersonalCocktail.objects.filter(id=id)[0]
         cocktail_template["name"] = cocktail.name
         cocktail_template["picture"] = cocktail.picture
@@ -531,9 +539,9 @@ def cocktail_information(id):
         cocktail_template["username"] = cocktail.user_id.username
         cocktail_template["user_id"] = cocktail.user_id.id
         for i in cocktail.ingredients.all():
-            ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id = id).values("centiliters")[0]
+            ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id=id).values("centiliters")[0]
         cocktail_template["ingredients"] = ingredients
-        if(Review.objects.filter(cocktail_id=id).exists()):
+        if (Review.objects.filter(cocktail_id=id).exists()):
             cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
         return cocktail_template
     else:
@@ -551,38 +559,43 @@ def cocktail_information(id):
         cocktail_template["id"] = id
         cocktail_template["recipe"] = cocktail_data["strInstructions"]
         for i in range(15):
-            if(cocktail_data["strIngredient"+str(i+1)] != None):
-                ingredients[cocktail_data["strIngredient"+str(i+1)]] = cocktail_data["strMeasure"+str(i+1)]
+            if (cocktail_data["strIngredient" + str(i + 1)] != None):
+                ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
         cocktail_template["ingredients"] = ingredients
         return cocktail_template
 
+
 def user_cocktails(uid):
-    cocktail_template = {"user_id" : str(uid), "user_cocktails" : []}
+    cocktail_template = {"user_id": str(uid), "user_cocktails": []}
     if uid == None:
-        cocktail_template = {"user_cocktails" : []}
+        cocktail_template = {"user_cocktails": []}
         for cocktail in PersonalCocktail.objects.all():
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id))
         return cocktail_template
-    if(PersonalCocktail.objects.filter(user_id=uid).exists()):
+    if (PersonalCocktail.objects.filter(user_id=uid).exists()):
         for cocktail in PersonalCocktail.objects.filter(user_id=uid):
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id))
         return cocktail_template
     else:
         return []
 
+
 @api_view(['GET'])
 def cocktails_by_ingredients(request):
+    if 'ingredients' not in request.GET:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     ingredients = request.GET["ingredients"].split(",")
     ingredients = [i.strip() for i in ingredients]
-    json_template = {"cocktails_DB" : get_cocktail_from_DB(ingredients), "cocktails_API" : get_cocktail_from_API(ingredients)}
+    json_template = {"cocktails_DB": get_cocktail_from_DB(ingredients),
+                     "cocktails_API": get_cocktail_from_API(ingredients)}
     return Response(data=json.dumps(json_template))
+
 
 @api_view(['GET'])
 def cocktail_by_information(request):
+    if 'id' not in request.GET:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     id = int(request.GET["id"])
     json_template = cocktail_information(id)
     return Response(data=json.dumps(json_template))
 
-@api_view(['GET'])
-def test(request):
-    return Response(user_cocktails(3))
