@@ -2,8 +2,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-# from .models import User, BookmarkedCocktail
-from .serializers import UserSerializer, BookmarkSerializer, ReviewSerializer, PersonalCocktailSerializer
+from .serializers import *
 import hashlib
 from datetime import datetime
 import base64
@@ -31,6 +30,7 @@ def home(request):
 
 
 '''
+    personal_cocktail documentation TO DO
 '''
 
 
@@ -39,6 +39,7 @@ def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':  # get personal cocktail
+        # maybe also the ingredient list has to be given
         try:
             if 'is_moderator' in request.session and request.session['is_moderator']:
                 cocktail_list = PersonalCocktail.objects.all().values()
@@ -48,6 +49,7 @@ def personal_cocktail(request):
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':  # create a new cocktail
+        #fix with ingredients adding
         now = datetime.now()
         imgurl = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
             + str(now.minute) + str(now.second) + str(now.microsecond) + '.' + request.data['extension']
@@ -65,6 +67,7 @@ def personal_cocktail(request):
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'PATCH':  # edit an existing cocktail
+        # add edit for ingredients
         try:
             cocktail_to_edit = PersonalCocktail.objects.get(id=request.data['cocktail_id'], user_id=request.session['id'])
             edited = False
@@ -102,7 +105,6 @@ def personal_cocktail(request):
             return Response(status=status.HTTP_200_OK)
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
 
 
 '''
