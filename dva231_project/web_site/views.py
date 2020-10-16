@@ -39,37 +39,67 @@ def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':  # get personal cocktail
-        # maybe also the ingredient list has to be given
         try:
             if 'is_moderator' in request.session and request.session['is_moderator']:
-                cocktail_list = PersonalCocktail.objects.all().values()
+                out = user_cocktail(None)
             else:
-                cocktail_list = PersonalCocktail.objects.filter(user_id=request.session['id']).values()
-            return Response(data=cocktail_list)
+                out = user_cocktail(request.session['id'])
+            return Response(data=out)
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':  # create a new cocktail
-        #fix with ingredients adding
         now = datetime.now()
-        imgurl = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
-            + str(now.minute) + str(now.second) + str(now.microsecond) + '.' + request.data['extension']
+        img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
+                  + str(now.minute) + str(now.second) + str(now.microsecond) + '.' + request.data['extension']
         data_for_serializer = {
             'user_id': request.session['id'],
             'name': request.data['name'],
             'description': request.data['description'],
-            'picture': imgurl,
+            'picture': img_url,
             'recipe': request.data['recipe']
         }
         serializer = PersonalCocktailSerializer(data=data_for_serializer)
         if serializer.is_valid():
-            with open("static/img/cocktail/" + request.session['id'] + '/' + imgurl, "wb") as f:
+            serializer.save()
+            cocktail_id = PersonalCocktail.object.get(user_id=request.session['id'], name=request.data['name'],
+                                                      description=request.data['description'], picture=img_url,
+                                                      recipe=request.data['recipe']).id
+            for ingredient in request.data['ingredients']:
+                try:
+                    ingredient_id = IngredientsList.objects.get(name=ingredient['name']).id
+                except IngredientsList.DoesNotExist:
+                    data_for_serializer = {
+                        'name': ingredient['name']
+                    }
+                    serializer = IngredientsListSerializer(data=data_for_serializer)
+                    if serializer.is_valid():
+                        serializer.save()
+                        ingredient_id = IngredientsList.objects.get(name=ingredient['name']).id
+                    else:
+                        cocktail = PersonalCocktail.get(id=cocktail_id)
+                        cocktail.delete()
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                    # add cocktailIngredients
+                data_for_serializer = {
+                    'cocktail_id': cocktail_id,
+                    'ingredient_id': ingredient_id,
+                    'centiliters': ingredient['centiliters']
+                }
+                serializer = CocktailIngredientsSerializer(data=data_for_serializer)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    cocktail = PersonalCocktail.get(id=cocktail_id)
+                    cocktail.delete()
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            with open("static/img/cocktail/" + request.session['id'] + '/' + img_url, "wb") as f:
                 f.write(base64.decodebytes(request.data['img']))
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'PATCH':  # edit an existing cocktail
-        # add edit for ingredients
         try:
-            cocktail_to_edit = PersonalCocktail.objects.get(id=request.data['cocktail_id'], user_id=request.session['id'])
+            cocktail_to_edit = PersonalCocktail.objects.get(id=request.data['cocktail_id'],
+                                                            user_id=request.session['id'])
             edited = False
             if 'name' in request.data:
                 edited = True
@@ -84,11 +114,42 @@ def personal_cocktail(request):
                 edited = True
                 os.remove("static/img/cocktail/" + request.session['id'] + '/' + cocktail_to_edit.picture)
                 now = datetime.now()
-                imgurl = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
-                         + str(now.minute) + str(now.second) + str(now.microsecond) + request.data['extension']
-                with open("static/img/cocktail/" + request.session['id'] + '/' + imgurl, "wb") as f:
+                img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
+                          + str(now.minute) + str(now.second) + str(now.microsecond) + request.data['extension']
+                with open("static/img/cocktail/" + request.session['id'] + '/' + img_url, "wb") as f:
                     f.write(base64.decodebytes(request.data['img']))
-                cocktail_to_edit.picture = imgurl
+                cocktail_to_edit.picture = img_url
+            if 'ingredients' in request.data:
+                for row in CocktailIngredients.objects.filter(cocktail_id=request.data['cocktail_id']):
+                    row.delete()
+                for ingredient in request.data['ingredients']:
+                    try:
+                        ingredient_id = IngredientsList.objects.get(name=ingredient['name']).id
+                    except IngredientsList.DoesNotExist:
+                        data_for_serializer = {
+                            'name': ingredient['name']
+                        }
+                        serializer = IngredientsListSerializer(data=data_for_serializer)
+                        if serializer.is_valid():
+                            serializer.save()
+                            ingredient_id = IngredientsList.objects.get(name=ingredient['name']).id
+                        else:
+                            cocktail = PersonalCocktail.get(id=request.data['cocktail_id'])
+                            cocktail.delete()
+                            return Response(status=status.HTTP_400_BAD_REQUEST)
+                        # add cocktailIngredients
+                    data_for_serializer = {
+                        'cocktail_id': request.data['cocktail_id'],
+                        'ingredient_id': ingredient_id,
+                        'centiliters': ingredient['centiliters']
+                    }
+                    serializer = CocktailIngredientsSerializer(data=data_for_serializer)
+                    if serializer.is_valid():
+                        serializer.save()
+                    else:
+                        cocktail = PersonalCocktail.get(id=request.data['cocktail_id'])
+                        cocktail.delete()
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
             if edited:
                 cocktail_to_edit.save()
                 return Response(status=status.HTTP_200_OK)
