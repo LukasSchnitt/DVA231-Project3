@@ -1,24 +1,17 @@
+import base64
+import hashlib
+import json
+import os
+from datetime import datetime
+
+import requests
+from django.db.models import Avg
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
 from .serializers import *
-import hashlib
-from datetime import datetime
-import base64
-import os
-# -----------------------------------------------------
-import requests
-import json
-from .models import *
-from django.db.models import Avg
-
-# ---------------------------------------------------
-
-# Create your views here.
-'''
-    just for testing purposes, needs to be changed in future
-'''
 
 
 def home(request):
@@ -31,7 +24,53 @@ def home(request):
 
 
 '''
-    personal_cocktail documentation TO DO
+    This API works only for users that are logged in, otherwise:
+        @returns HTTP STATUS 401
+    Allowed Request Methods:
+        - GET : used to retrieve the personal cocktail list
+            @returns HTTP STATUS 404 there are no personal cocktail
+            if the user is moderator:
+                @returns a json containing all the personal cocktails
+                            every element of the json contains:
+                                ... To DO
+            otherwise:
+                @returns a json containing all the user personal cocktails
+                            every element of the json contains 
+                                ... To DO
+        - POST : used to add a personal cocktail
+            @param name : string name of the cocktail (max 50 characters)
+            @param description : string description of the cocktail (max 500 characters)
+            @param recipe : string recipe of the cocktail
+            @param img : byte content of the cocktail image
+            @param extension : string extension of the original image
+            @param ingredients : dictionary containing
+                                    @param name : string name of the ingredient
+                                    @param centiliters : double quantity of that ingredient in centiliters
+            @returns HTTP STATUS 201 if personal cocktail has been added correctly
+            @returns HTTP STATUS 400 if data are not valid
+        - PATCH : used to edit an existing personal cocktail
+            @param cocktail_id : integer unique identifier of the cocktail
+            depending on what have to be changed one or more of:
+                @param name : string (max 50 characters)
+                @param description : string (maximum 500 characters)
+                @param recipe : string 
+                @param image : byte (also requires @param extension)
+                @param extension : string
+                @param ingredients : dictionary (when updating the ingredients all ingredients will be replaced)
+                                    every element of the dictionary must contain:
+                                    @param name : string
+                                    @param centiliters : double
+            @returns HTTP STATUS 200 if the personal cocktail has been changed correctly
+            @returns HTTP STATUS 400 if data are not changed
+            @returns HTTP STATUS 404 if data are not valid
+        - DELETE : use to delete an existing review
+            if the user is a moderator:
+                @param cocktail_id : integer unique identifier of the personal cocktail 
+                                        (if this parameter is not given then a normal DELETE will be done)
+            else:
+                @param id : integer unique identifier of the personal cocktail
+            @returns HTTP STATUS 200 if the review has been deleted successfully
+            @returns HTTP STATUS 404 if the data are not valid
 '''
 
 
@@ -39,7 +78,7 @@ def home(request):
 def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    if request.method == 'GET':  # get personal cocktail
+    if request.method == 'GET':
         try:
             if 'is_moderator' in request.session and request.session['is_moderator']:
                 out = user_cocktails(None)
@@ -48,10 +87,10 @@ def personal_cocktail(request):
             return Response(data=out)
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-    elif request.method == 'POST':  # create a new cocktail
+    elif request.method == 'POST':
         now = datetime.now()
-        img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
-                  + str(now.minute) + str(now.second) + str(now.microsecond) + '.' + request.data['extension']
+        img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute) + str(now.second) + \
+            str(now.microsecond) + '.' + request.data['extension']
         data_for_serializer = {
             'user_id': request.session['id'],
             'name': request.data['name'],
@@ -80,7 +119,6 @@ def personal_cocktail(request):
                         cocktail = PersonalCocktail.get(id=cocktail_id)
                         cocktail.delete()
                         return Response(status=status.HTTP_400_BAD_REQUEST)
-                    # add cocktailIngredients
                 data_for_serializer = {
                     'cocktail_id': cocktail_id,
                     'ingredient_id': ingredient_id,
@@ -97,7 +135,7 @@ def personal_cocktail(request):
                 f.write(base64.decodebytes(request.data['img']))
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'PATCH':  # edit an existing cocktail
+    elif request.method == 'PATCH':
         try:
             cocktail_to_edit = PersonalCocktail.objects.get(id=request.data['cocktail_id'],
                                                             user_id=request.session['id'])
@@ -115,8 +153,8 @@ def personal_cocktail(request):
                 edited = True
                 os.remove("static/img/cocktail/" + request.session['id'] + '/' + cocktail_to_edit.picture)
                 now = datetime.now()
-                img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) \
-                          + str(now.minute) + str(now.second) + str(now.microsecond) + request.data['extension']
+                img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute) + \
+                    str(now.second) + str(now.microsecond) + request.data['extension']
                 with open("static/img/cocktail/" + request.session['id'] + '/' + img_url, "wb") as f:
                     f.write(base64.decodebytes(request.data['img']))
                 cocktail_to_edit.picture = img_url
@@ -138,7 +176,6 @@ def personal_cocktail(request):
                             cocktail = PersonalCocktail.get(id=request.data['cocktail_id'])
                             cocktail.delete()
                             return Response(status=status.HTTP_400_BAD_REQUEST)
-                        # add cocktailIngredients
                     data_for_serializer = {
                         'cocktail_id': request.data['cocktail_id'],
                         'ingredient_id': ingredient_id,
@@ -157,7 +194,7 @@ def personal_cocktail(request):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except PersonalCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-    elif request.method == 'DELETE':  # remove a cocktail
+    elif request.method == 'DELETE':
         try:
             if 'is_moderator' in request.session and request.session['is_moderator'] and 'cocktail_id' in request.data:
                 user_cocktail = PersonalCocktail.objects.get(id=request.data['cocktail_id'])
@@ -273,20 +310,21 @@ def review(request):
 '''
 
 
-def get_cocktail_from_api_by_id(id):
-    cocktail_template = {"name": "", "picture": "", "id": ""}
-    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(id))
+def get_cocktail_from_api_by_id(cocktail_id):
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(cocktail_id))
     try:
         data = response.json()
     except ValueError:
         return []
     cocktail_data = data["drinks"][0]
-    cocktail_template["name"] = cocktail_data["strDrink"]
-    cocktail_template["picture"] = cocktail_data["strDrinkThumb"]
-    cocktail_template["id"] = id
-    if (Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(cocktail_id=cocktail_template["id"])
-            .values('is_personal_cocktail') == False):
-        cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
+    cocktail_template = {
+        "name": cocktail_data["strDrink"],
+        "picture": cocktail_data["strDrinkThumb"],
+        "id": cocktail_id
+    }
+    if Review.objects.filter(cocktail_id=cocktail_id).exists() and not Review.objects.filter(
+            cocktail_id=cocktail_template["id"]).values('is_personal_cocktail'):
+        cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id).aggregate(Avg('rating'))['rating']
     return cocktail_template
 
 
@@ -296,19 +334,20 @@ def get_cocktail_from_api_by_id(id):
 '''
 
 
-def get_cocktail_from_db_by_id(id):
-    cocktail_template = {"name": "", "picture": "", "id": ""}
-    if (PersonalCocktail.objects.filter(cocktail_id=id).exists()):
-        cocktail = PersonalCocktail.objects.filter(cocktail_id=id)[0]
-        cocktail_template["name"] = cocktail.name
-        cocktail_template["picture"] = cocktail.picture
-        cocktail_template["id"] = id
-        if (Review.objects.filter(cocktail_id=id).exists() and Review.objects.filter(
-                cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
-            cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
+def get_cocktail_from_db_by_id(cocktail_id):
+    if PersonalCocktail.objects.filter(cocktail_id=cocktail_id).exists():
+        cocktail = PersonalCocktail.objects.filter(cocktail_id=cocktail_id)[0]
+        cocktail_template = {
+            "name": cocktail.name,
+            "picture": cocktail.picture,
+            "id": cocktail_id
+        }
+        if Review.objects.filter(cocktail_id=cocktail_id).exists() and Review.objects.filter(
+                cocktail_id=cocktail_template["id"]).values('is_personal_cocktail'):
+            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id)\
+                .aggregate(Avg('rating'))['rating']
         return cocktail_template
-    else:
-        return {}
+    return {}
 
 
 '''
@@ -341,7 +380,7 @@ def get_cocktail_from_db_by_id(id):
 def bookmark(request):
     if not ('is_logged_in' in request.session and 'id' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    if request.method == 'GET':  # get bookmark
+    if request.method == 'GET':
         try:
             user_bookmarks = BookmarkedCocktail.objects.filter(user_id=request.session['id']) \
                 .values('cocktail_id', 'is_personal_cocktail')
@@ -356,7 +395,7 @@ def bookmark(request):
             return Response(data=response)
         except BookmarkedCocktail.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-    elif request.method == 'POST':  # add bookmark
+    elif request.method == 'POST':
         data_for_serializer = {
             'user_id': request.session['id'],
             'cocktail_id': request.data['cocktail_id'],
@@ -367,7 +406,7 @@ def bookmark(request):
             serializer.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'DELETE':  # remove bookmark
+    elif request.method == 'DELETE':
         try:
             bookmark_to_eliminate = BookmarkedCocktail.objects.get(
                 user_id=request.session['id'],
@@ -467,16 +506,12 @@ def user(request):
             return Response(status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-    else:
-        return Response(status=status.HTTP_409_CONFLICT)
+    return Response(status=status.HTTP_409_CONFLICT)
 
-
-# ----------------------------------------------------------------------------------
-# from now, testing part
 
 def get_cocktail_from_API(ingredient_list):
     # Use https://www.thecocktaildb.com/api/json/v1/1/filter.php?i='ingredient' for get possible Cocktails
-    # Send Back JSON with list of Cocktails containing (Cocktailname, Picture, Ingredients, Recipe, ID)
+    # Send Back JSON with list of Cocktails containing (CocktailName, Picture, Ingredients, Recipe, ID)
     json_template = []
     for ingredient in ingredient_list:
         response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + str(ingredient))
@@ -485,99 +520,94 @@ def get_cocktail_from_API(ingredient_list):
         except ValueError:
             continue
         for cocktail in data["drinks"]:
-            if (CocktailBlacklist.objects.filter(cocktail_id=cocktail["idDrink"]).exists()):
-                continue
-            cocktail_template = {"name": "", "picture": "", "id": ""}
-            cocktail_template["name"] = cocktail["strDrink"]
-            cocktail_template["picture"] = cocktail["strDrinkThumb"]
-            cocktail_template["id"] = cocktail["idDrink"]
-            if (Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
-                    cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == False):
-                cocktail_template["rating"] = \
-                    Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
-            if (cocktail_template not in json_template):
-                json_template.append(cocktail_template.copy())
+            if not CocktailBlacklist.objects.filter(cocktail_id=cocktail["idDrink"]).exists():
+                cocktail_template = {
+                    "name": cocktail["strDrink"],
+                    "picture": cocktail["strDrinkThumb"],
+                    "id": cocktail["idDrink"]
+                }
+                if Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
+                        cocktail_id=cocktail_template["id"]).values('is_personal_cocktail'):
+                    cocktail_template["rating"] = \
+                        Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
+                if cocktail_template not in json_template:
+                    json_template.append(cocktail_template.copy())
     return json_template
 
 
 def get_cocktail_from_DB(ingredient_list):
     json_template = []
-    cocktail_template = {"name": "", "picture": "", "id": "", "user": ""}
 
     for ingredient in ingredient_list:
-        if (IngredientsList.objects.filter(name=str(ingredient)).exists()):
-            ingredient_object = IngredientsList.objects.filter(name=str(ingredient))[0]
-        else:
+        if not IngredientsList.objects.filter(name=str(ingredient)).exists():
             continue
-
+        ingredient_object = IngredientsList.objects.filter(name=str(ingredient))[0]
         for cocktail in PersonalCocktail.objects.all():
-            cocktail_template = {"name": "", "picture": "", "id": ""}
-            if (ingredient_object in cocktail.ingredients.all()):
+            cocktail_template = {}
+            if ingredient_object in cocktail.ingredients.all():
                 cocktail_template["name"] = cocktail.name
                 cocktail_template["picture"] = cocktail.picture
                 cocktail_template["id"] = cocktail.id
                 cocktail_template["user"] = cocktail.user_id.username
-                if (Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
-                        cocktail_id=cocktail_template["id"]).values('is_personal_cocktail') == True):
+                if Review.objects.filter(cocktail_id=cocktail_template["id"]).exists() and Review.objects.filter(
+                        cocktail_id=cocktail_template["id"]).values('is_personal_cocktail'):
                     cocktail_template["rating"] = \
                         Review.objects.filter(cocktail_id=cocktail_template["id"]).aggregate(Avg('rating'))['rating']
-                if (cocktail_template not in json_template):
+                if cocktail_template not in json_template:
                     json_template.append(cocktail_template.copy())
     return json_template
 
 
-def cocktail_information(id):
-    cocktail_template = {"name": "", "picture": "", "id": "", "description": "", "recipe": "", "user": ""}
+def cocktail_information(cocktail_id):
+    cocktail_template = {}
     ingredients = {}
-    if (PersonalCocktail.objects.filter(id=id).exists()):
-        cocktail = PersonalCocktail.objects.filter(id=id)[0]
+    if PersonalCocktail.objects.filter(id=cocktail_id).exists():
+        cocktail = PersonalCocktail.objects.filter(id=cocktail_id)[0]
         cocktail_template["name"] = cocktail.name
         cocktail_template["picture"] = cocktail.picture
-        cocktail_template["id"] = id
+        cocktail_template["id"] = cocktail_id
         cocktail_template["recipe"] = cocktail.recipe
         cocktail_template["description"] = cocktail.description
         cocktail_template["username"] = cocktail.user_id.username
         cocktail_template["user_id"] = cocktail.user_id.id
         for i in cocktail.ingredients.all():
-            ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id=id).values("centiliters")[0]
+            ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id=cocktail_id).values("centiliters")[0]
         cocktail_template["ingredients"] = ingredients
-        if (Review.objects.filter(cocktail_id=id).exists()):
-            cocktail_template["rating"] = Review.objects.filter(cocktail_id=id).aggregate(Avg('rating'))['rating']
+        if Review.objects.filter(cocktail_id=cocktail_id).exists():
+            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id)\
+                .aggregate(Avg('rating'))['rating']
         return cocktail_template
-    else:
-        cocktail_template = {"name": "", "picture": "", "id": ""}
-        response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(id))
-        try:
-            data = response.json()
-        except ValueError:
-            return []
-        if data["drinks"] == None:
-            return []
-        cocktail_data = data["drinks"][0]
-        cocktail_template["name"] = cocktail_data["strDrink"]
-        cocktail_template["picture"] = cocktail_data["strDrinkThumb"]
-        cocktail_template["id"] = id
-        cocktail_template["recipe"] = cocktail_data["strInstructions"]
-        for i in range(15):
-            if (cocktail_data["strIngredient" + str(i + 1)] != None):
-                ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
-        cocktail_template["ingredients"] = ingredients
-        return cocktail_template
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(cocktail_id))
+    try:
+        data = response.json()
+    except ValueError:
+        return []
+    if data["drinks"] is None:
+        return []
+    cocktail_data = data["drinks"][0]
+    cocktail_template["name"] = cocktail_data["strDrink"]
+    cocktail_template["picture"] = cocktail_data["strDrinkThumb"]
+    cocktail_template["id"] = cocktail_id
+    cocktail_template["recipe"] = cocktail_data["strInstructions"]
+    for i in range(15):
+        if cocktail_data["strIngredient" + str(i + 1)] is not None:
+            ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
+    cocktail_template["ingredients"] = ingredients
+    return cocktail_template
 
 
 def user_cocktails(uid):
-    cocktail_template = {"user_id": str(uid), "user_cocktails": []}
-    if uid == None:
+    if uid is None:
         cocktail_template = {"user_cocktails": []}
         for cocktail in PersonalCocktail.objects.all():
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id))
         return cocktail_template
-    if (PersonalCocktail.objects.filter(user_id=uid).exists()):
+    if PersonalCocktail.objects.filter(user_id=uid).exists():
+        cocktail_template = {"user_id": str(uid), "user_cocktails": []}
         for cocktail in PersonalCocktail.objects.filter(user_id=uid):
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id))
         return cocktail_template
-    else:
-        return []
+    return []
 
 
 @api_view(['GET'])
@@ -586,8 +616,10 @@ def cocktails_by_ingredients(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     ingredients = request.GET["ingredients"].split(",")
     ingredients = [i.strip() for i in ingredients]
-    json_template = {"cocktails_DB": get_cocktail_from_DB(ingredients),
-                     "cocktails_API": get_cocktail_from_API(ingredients)}
+    json_template = {
+        "cocktails_DB": get_cocktail_from_DB(ingredients),
+        "cocktails_API": get_cocktail_from_API(ingredients)
+    }
     return Response(data=json.dumps(json_template))
 
 
@@ -595,7 +627,6 @@ def cocktails_by_ingredients(request):
 def cocktail_by_information(request):
     if 'id' not in request.GET:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    id = int(request.GET["id"])
-    json_template = cocktail_information(id)
+    cocktail_id = int(request.GET["id"])
+    json_template = cocktail_information(cocktail_id)
     return Response(data=json.dumps(json_template))
-
