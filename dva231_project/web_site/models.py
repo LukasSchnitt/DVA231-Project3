@@ -1,7 +1,6 @@
 from django.db import models
 
 
-# Create your models here.
 class User(models.Model):
     username = models.CharField(max_length=20)
     password = models.CharField(max_length=64)
@@ -11,7 +10,6 @@ class User(models.Model):
 
 class IngredientsList(models.Model):
     name = models.CharField(max_length=50)
-    
 
 
 class PersonalCocktail(models.Model):
@@ -28,6 +26,7 @@ class CocktailIngredients(models.Model):
     cocktail_id = models.ForeignKey(PersonalCocktail, on_delete=models.CASCADE)
     ingredient_id = models.ForeignKey(IngredientsList, on_delete=models.CASCADE)
     centiliters = models.FloatField()
+
 
 class Review(models.Model):
     class RatingValue(models.IntegerChoices):
