@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
+from random import randint
 
 import requests
 from django.db.models import Avg
@@ -311,6 +312,7 @@ def review(request):
 
 '''
     Cocktail Functions below
+
     Local function: get_cocktail_from_api_by_id (https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i='id')
     Return Description of a Cocktail (Cocktail Card) with a specific ID form the Cocktail-API if it exists there
     @param cocktail_id : integer cocktail id 
@@ -582,6 +584,7 @@ def get_cocktail_from_DB(ingredient_list, alcoholic):
             cocktail_list = PersonalCocktail.objects.filter(alcoholic=False)
         else:
             cocktail_list = PersonalCocktail.objects.all()
+
         for cocktail in cocktail_list:
             cocktail_template = {}
             if ingredient_object in cocktail.ingredients.all():
@@ -690,6 +693,41 @@ def user_cocktails(uid):
     @returns: JSON-String for the Website which contains list of API and DB cocktails which contain the ingredients
     (Calls local get_cocktail_from_DB and get_cocktail_from_API functions)
 """
+
+def random_cocktail_from_API():
+    cocktail_template = {}
+    ingredients = {}
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/random.php")
+    data = response.json()
+    cocktail_data = data["drinks"][0]
+    cocktail_template["name"] = cocktail_data["strDrink"]
+    cocktail_template["picture"] = cocktail_data["strDrinkThumb"]
+    cocktail_template["id"] = cocktail_data["idDrink"]
+    cocktail_template["recipe"] = cocktail_data["strInstructions"]
+    for i in range(15):
+        if cocktail_data["strIngredient" + str(i + 1)] is not None:
+            ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
+    cocktail_template["ingredients"] = ingredients
+    return cocktail_template
+
+def random_cocktail_from_DB():
+    cocktails = PersonalCocktail.objects.all()
+    size = len(cocktails)
+    cocktail = cocktails[randint(0,size-1)]
+    return cocktail_information(cocktail.id)
+
+
+@api_view(['GET'])
+def random_cocktail(request):
+    choose = randint(0,1)
+    json_template = {"random_cocktail" : {}, "Source" : ""}
+    if choose == 0:
+        json_template["random_cocktail"] = random_cocktail_from_DB()
+        json_template["Source"] = "DB"
+    else:
+        json_template["random_cocktail"] = random_cocktail_from_API()
+        json_template["Source"] = "API"
+    return Response(data=json.dumps(json_template))
 
 
 @api_view(['GET'])
