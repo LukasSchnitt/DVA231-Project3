@@ -134,6 +134,8 @@ def personal_cocktail(request):
                     cocktail = PersonalCocktail.get(id=cocktail_id)
                     cocktail.delete()
                     return Response(status=status.HTTP_400_BAD_REQUEST)
+            if not os.path.isdir("static/img/cocktail/" + request.session['id']):
+                os.mkdir("static/img/cocktail/" + request.session['id'])
             with open("static/img/cocktail/" + request.session['id'] + '/' + img_url, "wb") as f:
                 f.write(base64.decodebytes(request.data['img']))
             return Response(status=status.HTTP_201_CREATED)
