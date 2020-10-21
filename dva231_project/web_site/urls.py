@@ -9,5 +9,6 @@ urlpatterns = [
     path('cocktail_information', views.cocktail_by_information, name='urlname'),
     path('personal_cocktail', views.personal_cocktail),
     path('review', views.review, name='urlname'),
-    path('user', views.user)
+    path('user', views.user),
+    path('random', views.random_cocktail)
 ]
