@@ -10,6 +10,7 @@ import requests
 import json
 from .models import *
 from django.db.models import Avg
+from django.shortcuts import render
 
 # ---------------------------------------------------
 
@@ -20,12 +21,16 @@ from django.db.models import Avg
 
 
 def home(request):
+
+
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         return HttpResponse("Hello Moderator")
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         return HttpResponse("Hello Logged in")
-    return HttpResponse("Hello World")
+
+    template_name = 'web_site/index.html'
+    return render(request, template_name)
 
 
 
