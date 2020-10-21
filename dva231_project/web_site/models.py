@@ -18,6 +18,7 @@ class PersonalCocktail(models.Model):
     description = models.CharField(max_length=500)
     picture = models.CharField(max_length=25)
     recipe = models.TextField()
+    alcoholic = models.BooleanField(default=False)
     ingredients = models.ManyToManyField(IngredientsList, through='CocktailIngredients',
                                          through_fields=('cocktail_id', 'ingredient_id'))
 

@@ -7,25 +7,15 @@ from datetime import datetime
 import requests
 from django.db.models import Avg
 from django.http import HttpResponse
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-# from .models import User, BookmarkedCocktail
-from .serializers import UserSerializer, BookmarkSerializer
-import hashlib
-# -----------------------------------------------------
-import requests
-import json
-from .models import *
-from django.db.models import Avg
-from django.shortcuts import render
 
 from .serializers import *
 
 
 def home(request):
-
-
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         return HttpResponse("Hello Moderator")
@@ -34,6 +24,7 @@ def home(request):
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
+
 
 '''
     This API works only for users that are logged in, otherwise:
@@ -317,8 +308,12 @@ def review(request):
 
 
 '''
-    @param cocktail_id : integer cocktail id form the REST API
-    @returns             dictionary containing 'id'=@param id, 'is_personal_cocktail'=False, 'image', 'name', 'average'
+    Cocktail Functions below
+    Local function: get_cocktail_from_api_by_id (https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i='id')
+    Return Description of a Cocktail (Cocktail Card) with a specific ID form the Cocktail-API if it exists there
+    @param cocktail_id : integer cocktail id 
+    @returns: dictionary containing 'id'=@param id, 'image', 'name',
+    returns also average rating 'rating' of the reviews if there exists at least one review for it
 '''
 
 
@@ -340,10 +335,13 @@ def get_cocktail_from_api_by_id(cocktail_id):
     return cocktail_template
 
 
-'''
-    @param cocktail_id : integer cocktail id form the DataBase
-    @returns             dictionary containing 'id'=@param id, 'is_personal_cocktail'=True, 'image', 'name', 'average'
-'''
+"""
+    Local function: get_cocktail_from_db_by_id 
+    Return Description of a Cocktail (Cocktail Card) with a specific ID form the Database if it exists there
+    @param cocktail_id : integer cocktail id 
+    @returns : dictionary containing 'id'=@param id, 'image', 'name',
+    returns also average rating 'rating' of the reviews if there exists at least one review for it
+"""
 
 
 def get_cocktail_from_db_by_id(cocktail_id):
@@ -356,7 +354,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
         }
         if Review.objects.filter(cocktail_id=cocktail_id).exists() and Review.objects.filter(
                 cocktail_id=cocktail_template["id"]).values('is_personal_cocktail'):
-            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id)\
+            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id) \
                 .aggregate(Avg('rating'))['rating']
         return cocktail_template
     return {}
@@ -521,6 +519,16 @@ def user(request):
     return Response(status=status.HTTP_409_CONFLICT)
 
 
+"""
+    Local function: get_cocktail_from_API (https://www.thecocktaildb.com/api/json/v1/1/filter.php?i='ingredient')
+    Return Description of a Cocktails (Cocktail Card) which contains at least one of the ingredients
+    @param ingredient_list : list of ingredients (strings)
+    @returns: list of cocktail-dictionaries containing 'id', 'image', 'name',
+    returns also average rating 'rating' of the reviews in the cocktail dictionary if there exists at least one review 
+    for it
+"""
+
+
 def get_cocktail_from_API(ingredient_list):
     # Use https://www.thecocktaildb.com/api/json/v1/1/filter.php?i='ingredient' for get possible Cocktails
     # Send Back JSON with list of Cocktails containing (CocktailName, Picture, Ingredients, Recipe, ID)
@@ -547,14 +555,32 @@ def get_cocktail_from_API(ingredient_list):
     return json_template
 
 
-def get_cocktail_from_DB(ingredient_list):
+"""
+    Local function: get_cocktail_from_DB
+    Return Description of a Cocktails (Cocktail Card) which contains at least one of the ingredients
+    @param ingredient_list : list of ingredients (strings)
+    @returns: list of cocktail-dictionaries containing 'id', 'image', 'name',
+    returns also average rating 'rating' of the reviews in the cocktail dictionary if there exists at least one review
+    for it
+"""
+
+
+def get_cocktail_from_DB(ingredient_list, alcoholic):
     json_template = []
 
     for ingredient in ingredient_list:
         if not IngredientsList.objects.filter(name=str(ingredient)).exists():
             continue
         ingredient_object = IngredientsList.objects.filter(name=str(ingredient))[0]
-        for cocktail in PersonalCocktail.objects.all():
+        if alcoholic is None:
+            cocktail_list = PersonalCocktail.objects.all()
+        elif alcoholic:
+            cocktail_list = PersonalCocktail.objects.filter(alcoholic=True)
+        elif not alcoholic:
+            cocktail_list = PersonalCocktail.objects.filter(alcoholic=False)
+        else:
+            cocktail_list = PersonalCocktail.objects.all()
+        for cocktail in cocktail_list:
             cocktail_template = {}
             if ingredient_object in cocktail.ingredients.all():
                 cocktail_template["name"] = cocktail.name
@@ -568,6 +594,26 @@ def get_cocktail_from_DB(ingredient_list):
                 if cocktail_template not in json_template:
                     json_template.append(cocktail_template.copy())
     return json_template
+
+
+"""
+    Local function: cocktail_information
+    Return full Description of a Cocktail from the Database, 
+    if there are no Cocktail in the Database which matches the ID
+    then the Cocktail-API will be requested (https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i='id')
+    @param id : id of the cocktail
+    @returns: list of cocktail-dictionaries containing 
+                    'id', 
+                    'image', 
+                    'name', 
+                    'recipe', 
+                    'description', 
+                    'username', 
+                    'user-id', 
+                    'ingredients'
+    returns also average rating 'rating' of the reviews in the cocktail dictionary 
+    if there exists at least one review for it
+"""
 
 
 def cocktail_information(cocktail_id):
@@ -586,7 +632,7 @@ def cocktail_information(cocktail_id):
             ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id=cocktail_id).values("centiliters")[0]
         cocktail_template["ingredients"] = ingredients
         if Review.objects.filter(cocktail_id=cocktail_id).exists():
-            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id)\
+            cocktail_template["rating"] = Review.objects.filter(cocktail_id=cocktail_id) \
                 .aggregate(Avg('rating'))['rating']
         return cocktail_template
     response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(cocktail_id))
@@ -608,6 +654,18 @@ def cocktail_information(cocktail_id):
     return cocktail_template
 
 
+"""
+    Local function: user_cocktail
+    Return  Description of all Cocktails (Cocktail-Cards) from a specific user(user-id) in the Database
+    @param uid : integer id of the user
+    @returns: dictionary with user-id and a list of cocktail-dictionaries containing 'id', 'image', 'name', 'recipe', 
+                                                                'description', 'username', 'user-id', 'ingredients'
+    returns also average rating 'rating' of the reviews in the cocktail dictionary 
+                if there exists at least one review for it 
+    (Calls cocktail_information function for each cocktail-id from the user-cocktails)
+"""
+
+
 def user_cocktails(uid):
     if uid is None:
         cocktail_template = {"user_cocktails": []}
@@ -622,6 +680,16 @@ def user_cocktails(uid):
     return []
 
 
+"""
+    API-function: cocktails_by_ingredients
+    @param uid : request from the Website (List of ingredients), 
+                    alcoholic-FLag for getting all alcoholic(True), non-alcoholic(False)
+    or all Cocktails(None) from the Database
+    @returns: JSON-String for the Website which contains list of API and DB cocktails which contain the ingredients
+    (Calls local get_cocktail_from_DB and get_cocktail_from_API functions)
+"""
+
+
 @api_view(['GET'])
 def cocktails_by_ingredients(request):
     if 'ingredients' not in request.GET:
@@ -629,10 +697,18 @@ def cocktails_by_ingredients(request):
     ingredients = request.GET["ingredients"].split(",")
     ingredients = [i.strip() for i in ingredients]
     json_template = {
-        "cocktails_DB": get_cocktail_from_DB(ingredients),
+        "cocktails_DB": get_cocktail_from_DB(ingredients, alcoholic=None),
         "cocktails_API": get_cocktail_from_API(ingredients)
     }
     return Response(data=json.dumps(json_template))
+
+
+"""
+    API-function: cocktails_by_information
+    @param uid : request from the Website (id of requested Cocktail)
+    @returns: JSON-String for the Website full description of a Cocktail
+    (Calls local cocktail_information function)
+"""
 
 
 @api_view(['GET'])
