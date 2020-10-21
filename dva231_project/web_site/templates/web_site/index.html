@@ -1,0 +1,167 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Cocktail Search</title>
+    <meta name="description" content="The HTML5 Herald">
+    <meta name="author" content="SitePoint">
+
+
+    <!-- Bootstrap & jQuery -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'web_site/style.css' %}">
+    <link rel="stylesheet" href="{% static 'web_site/tagsinput.css' %}">
+
+    <script src="{% static 'web_site/script.js' %}"></script>
+    <script src="{% static 'web_site/tagsinput.js' %}"></script>
+    <script src="{% static 'web_site/rater.js' %}"></script>
+
+
+</head>
+
+<body>
+
+    <div id="header" class="row justify-content-end w-100">
+        <div class="d-inline-flex mr-3">
+            <button id="login-btn" class="btn">Login</button>
+        </div>
+        <div class="d-inline-flex mr-3">
+            <button id="register-btn" class="btn">Register</button>
+        </div>
+    </div>
+
+    <div class="container" id="page-container">
+        <!-- Part containing the searchbox, i.e. the first page -->
+        <div class="row" id="search-container">
+            <div class="col">
+                <div class="row justify-content-center mb-3">
+                    <img src="{% static 'web_site/img/logo.png' %}/" id="main-logo" class="img-fluid " alt="Cocktail Search">
+                </div>
+                <div class="row justify-content-center">
+                    <div class="w-100">
+                        <input class="form-control" data-role="tagsinput" type="text" placeholder="Search ingredients..." aria-label="Search">
+                      </div>
+                </div>
+                <div class="row justify-content-center mt-2">
+                    <button class="btn search-btn m-2" id="search-drink-btn">
+                        Search drinks
+                    </button>
+                    <button class="btn search-btn m-2" id="random-drink-btn">
+                        Random drink
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    <!-- Part containing the search results -->
+
+        <div id="drinks-grid-container" style="display: none;">
+            <div class="row d-inline-flex mb-4">
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://www.culinaryhill.com/wp-content/uploads/2020/04/Mojito-Cocktail-Recipe-Culinary-Hill-LR-square.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Mojito</p>
+                            <div class="rating align-middle" data-rate-value=5></div>
+                        </div>                
+                    </div>
+                </div>
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://s3-eu-west-1.amazonaws.com/jamieoliverprod/_int/rdb2/upload/1223_1_1403275789_lrg.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Whisky sour</p>
+                            <div class="rating align-middle" data-rate-value=4.5></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://www.liquor.com/thmb/uXKVc-zQZUPo4hpOEnxJbUiD2qQ=/720x720/filters:fill(auto,1)/__opt__aboutcom__coeus__resources__content_migration__liquor__2017__07__13091447__spanish-gin-and-tonic-720x720-recipe-c700052505244cdcb95f241131870e42.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Gin & Tonic</p>
+                            <div class="rating align-middle" data-rate-value=4></div>
+                        </div>                
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row d-inline-flex">
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://www.culinaryhill.com/wp-content/uploads/2020/04/Mojito-Cocktail-Recipe-Culinary-Hill-LR-square.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Mojito</p>
+                            <div class="rating align-middle" data-rate-value=5></div>
+                        </div>                
+                    </div>
+                </div>
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://s3-eu-west-1.amazonaws.com/jamieoliverprod/_int/rdb2/upload/1223_1_1403275789_lrg.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Whisky sour</p>
+                            <div class="rating align-middle" data-rate-value=4.5></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-lg mt-2">
+                    <div class="cocktail-cell shadow">
+                        <img src="https://www.liquor.com/thmb/uXKVc-zQZUPo4hpOEnxJbUiD2qQ=/720x720/filters:fill(auto,1)/__opt__aboutcom__coeus__resources__content_migration__liquor__2017__07__13091447__spanish-gin-and-tonic-720x720-recipe-c700052505244cdcb95f241131870e42.jpg">
+                        <div class="cocktail-cell-description">
+                            <p class="name">Gin & Tonic</p>
+                            <div class="rating align-middle" data-rate-value=4></div>
+                        </div>                
+                    </div>
+                </div>
+
+            </div>
+            <div class="col text-center mt-5">
+                <button id="show-more-btn" class="btn">Show more results</button>
+            </div>
+        </div>
+
+
+
+    </div>
+<!-- Modal -->
+<div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="row">
+                <div class="col ml-0 pl-0">
+                    <img id="cocktail-modal-img" src="">
+                </div>
+                <div class="col text-center p-3">
+                    <h3 id="cocktail-modal-name"></h3>
+                </div>
+            </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

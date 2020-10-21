@@ -10,18 +10,30 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+# from .models import User, BookmarkedCocktail
+from .serializers import UserSerializer, BookmarkSerializer
+import hashlib
+# -----------------------------------------------------
+import requests
+import json
+from .models import *
+from django.db.models import Avg
+from django.shortcuts import render
 
 from .serializers import *
 
 
 def home(request):
+
+
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         return HttpResponse("Hello Moderator")
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         return HttpResponse("Hello Logged in")
-    return HttpResponse("Hello World")
 
+    template_name = 'web_site/index.html'
+    return render(request, template_name)
 
 '''
     This API works only for users that are logged in, otherwise:

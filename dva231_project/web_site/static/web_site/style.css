@@ -1,0 +1,112 @@
+#search-container{
+    margin-top: 15%;
+}
+
+#main-logo{
+    max-width: 20rem;
+}
+
+
+.search-btn{
+    background-color: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.7);
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+}
+
+.search-btn:hover{
+    background-color: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.9);
+}
+
+#drinks-grid-container{
+    margin-top: 10em;
+    margin-bottom: 5em;
+}
+
+.cocktail-cell{
+    position: relative;
+}
+
+.cocktail-cell-description{
+    position: absolute;
+    bottom: 5%;
+    left: 0;
+
+    font-size: 1.2em;
+
+    background-color: rgba(255, 255, 255, 0.8);
+    width: fit-content;
+    padding: 0.5em;
+    padding-right: 1.5em;
+}
+
+
+
+.cocktail-cell p, .cocktail-cell .rating{
+    display: inline-block;
+}
+
+.name{
+    margin-bottom: 0;
+}
+
+.rating{
+    margin-bottom: .4em;
+    margin-left: 1em;
+}
+
+.rate-base-layer{
+    color: rgba(255, 166, 0);
+
+}
+
+.rate-select-layer{
+    color: rgba(255, 166, 0, 0.8);
+}
+
+.rate-hover-layer
+{
+    color: rgb(255, 166, 0);
+}
+
+
+.cocktail-cell{
+    cursor: pointer;
+}
+
+.cocktail-cell:hover img{
+    opacity: 1;
+    transition: 0.3s;
+}
+
+.cocktail-cell img{
+    width:100%;
+    height: 18em;
+    object-fit: cover;
+    opacity: 0.7;
+    transition: 0.3s;
+}
+
+#show-more-btn{
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.5em 2em;
+}
+
+#show-more-btn:hover{
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+#cocktail-modal-img{
+    width: 40%;
+    height: 100%;
+    min-height: 40rem;
+    min-width: 35rem;
+    object-fit: cover;
+
+}
+
+.modal-body{
+    min-height: 30rem;
+
+}
