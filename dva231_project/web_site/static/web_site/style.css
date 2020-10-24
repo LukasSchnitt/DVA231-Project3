@@ -56,6 +56,10 @@
     margin-left: 1em;
 }
 
+.rating span{
+    /* font-size: 2rem; */
+}
+
 .rate-base-layer{
     color: rgba(255, 166, 0);
 
@@ -101,7 +105,7 @@
     width: 40%;
     height: 100%;
     min-height: 40rem;
-    min-width: 35rem;
+    min-width: 100%;
     object-fit: cover;
 
 }
@@ -110,3 +114,63 @@
     min-height: 30rem;
 
 }
+
+.ingredient{
+    display: inline-block;
+    margin: 0.2rem;
+    padding: 0.5rem 1rem;
+    font-size: small;
+
+    border-radius: 2rem;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.ingredient-searched{
+    background-color: rgba(68, 114, 196, 1) !important;
+    color: white;
+}
+
+.amount{
+    display: block;
+}
+
+#no-drinks-info{
+    color: rgba(0, 0, 0, 0.6);
+}
+#scroll-up{
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    font-size: 2rem;
+    width: 4rem;
+    height: 4rem;
+    background-color: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.35);
+    transition: 0.3s;
+}
+
+#scroll-up:hover{
+    background-color: rgba(0, 0, 0, 0.08);
+    color: rgba(68, 114, 196, 0.8);
+    transition: 0.3s; 
+}
+
+#drink-amounts{
+    margin-left: 1rem;
+    border-left: 2px solid rgba(68, 114, 196, 1);
+}
+
+#drink-amounts li::before {
+    content: "\02023"; 
+    color: rgba(68, 114, 196, 1);
+    font-weight: bold; 
+    display: inline-block; 
+    width: 1em; 
+    margin-left: -1em; 
+  }
+
+  #show-reviews-btn{
+    background-color: rgba(68, 114, 196, 1);
+    color: white;
+    border-radius: 0;
+  }
