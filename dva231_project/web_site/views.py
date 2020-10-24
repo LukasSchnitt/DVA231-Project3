@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
-from random import randint
+from random import getrandbits, choice
 
 import requests
 from django.db.models import Avg
@@ -25,6 +25,18 @@ def home(request):
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
+
+
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
+def cocktail_API(request):
+    if request.method == 'GET':
+        if 'ingredients' in request.GET:
+            return cocktails_by_ingredients(request)
+        if 'id' in request.GET:
+            return cocktail_by_information(request)
+        if 'random' in request.GET and request.GET['random']:
+            return random_cocktail()
+    return personal_cocktail(request)
 
 
 '''
@@ -78,7 +90,6 @@ def home(request):
 '''
 
 
-@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -694,6 +705,7 @@ def user_cocktails(uid):
     (Calls local get_cocktail_from_DB and get_cocktail_from_API functions)
 """
 
+
 def random_cocktail_from_API():
     cocktail_template = {}
     ingredients = {}
@@ -710,30 +722,28 @@ def random_cocktail_from_API():
     cocktail_template["ingredients"] = ingredients
     return cocktail_template
 
+
 def random_cocktail_from_DB():
     cocktails = PersonalCocktail.objects.all()
-    size = len(cocktails)
-    cocktail = cocktails[randint(0,size-1)]
+    cocktail = choice(cocktails)
     return cocktail_information(cocktail.id)
 
 
-@api_view(['GET'])
-def random_cocktail(request):
-    choose = randint(0,1)
-    json_template = {"random_cocktail" : {}, "Source" : ""}
-    if choose == 0:
-        json_template["random_cocktail"] = random_cocktail_from_DB()
-        json_template["Source"] = "DB"
+def random_cocktail():
+    if not bool(getrandbits(1)):
+        json_template = {
+            "random_cocktail": random_cocktail_from_DB(),
+            "source": "DB"
+        }
     else:
-        json_template["random_cocktail"] = random_cocktail_from_API()
-        json_template["Source"] = "API"
+        json_template = {
+            "random_cocktail": random_cocktail_from_API(),
+            "source": "API"
+        }
     return Response(data=json.dumps(json_template))
 
 
-@api_view(['GET'])
 def cocktails_by_ingredients(request):
-    if 'ingredients' not in request.GET:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
     ingredients = request.GET["ingredients"].split(",")
     ingredients = [i.strip() for i in ingredients]
     json_template = {
@@ -751,10 +761,7 @@ def cocktails_by_ingredients(request):
 """
 
 
-@api_view(['GET'])
 def cocktail_by_information(request):
-    if 'id' not in request.GET:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
     cocktail_id = int(request.GET["id"])
     json_template = cocktail_information(cocktail_id)
     return Response(data=json.dumps(json_template))
