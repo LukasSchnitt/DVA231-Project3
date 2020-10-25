@@ -583,16 +583,20 @@ def user_login(request):
 
 
 def user_signup(request):
-    data_for_serializer = {
-        'username': request.data['username'],
-        'password': hashlib.sha256(request.data['password'].encode()).hexdigest(),
-        'is_moderator': (request.data['moderator'] if 'is_moderator' in request.data else False),
-        'is_banned': (request.data['is_banned'] if 'is_banned' in request.data else False)
-    }
-    serializer = UserSerializer(data=data_for_serializer)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
+    try:
+        User.objects.get(username=request.data['username'])
+        return Response(status=status.HTTP_226_IM_USED)
+    except User.DoesNotExist:
+        data_for_serializer = {
+            'username': request.data['username'],
+            'password': hashlib.sha256(request.data['password'].encode()).hexdigest(),
+            'is_moderator': (request.data['moderator'] if 'is_moderator' in request.data else False),
+            'is_banned': (request.data['is_banned'] if 'is_banned' in request.data else False)
+        }
+        serializer = UserSerializer(data=data_for_serializer)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
