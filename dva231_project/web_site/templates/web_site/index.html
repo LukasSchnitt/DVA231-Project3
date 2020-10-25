@@ -25,6 +25,7 @@
     <script src="{% static 'web_site/tagsinput.js' %}"></script>
     <script src="{% static 'web_site/rater.js' %}"></script>
 
+    <meta id="token" value="{{ csrf_token }}">
 
 </head>
 
@@ -48,7 +49,7 @@
                 </div>
                 <div class="row justify-content-center">
                     <div class="w-100">
-                        <input class="form-control" data-role="tagsinput" type="text" placeholder="Search ingredients..." aria-label="Search">
+                        <input class="form-control" id="ingredients-search" data-role="tagsinput" type="text" placeholder="Search ingredients..." aria-label="Search">
                       </div>
                 </div>
                 <div class="row justify-content-center mt-2">
@@ -62,84 +63,18 @@
             </div>
         </div>
 
-    <!-- Part containing the search results -->
-
+        <div class="col text-center mt-5" id="no-drinks-info" style="display: none;">
+            <h3>There are no drinks with such ingredients. Try different ones!</h3>
+        </div>
+        
         <div id="drinks-grid-container" style="display: none;">
-            <div class="row d-inline-flex mb-4">
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://www.culinaryhill.com/wp-content/uploads/2020/04/Mojito-Cocktail-Recipe-Culinary-Hill-LR-square.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Mojito</p>
-                            <div class="rating align-middle" data-rate-value=5></div>
-                        </div>                
-                    </div>
-                </div>
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://s3-eu-west-1.amazonaws.com/jamieoliverprod/_int/rdb2/upload/1223_1_1403275789_lrg.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Whisky sour</p>
-                            <div class="rating align-middle" data-rate-value=4.5></div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://www.liquor.com/thmb/uXKVc-zQZUPo4hpOEnxJbUiD2qQ=/720x720/filters:fill(auto,1)/__opt__aboutcom__coeus__resources__content_migration__liquor__2017__07__13091447__spanish-gin-and-tonic-720x720-recipe-c700052505244cdcb95f241131870e42.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Gin & Tonic</p>
-                            <div class="rating align-middle" data-rate-value=4></div>
-                        </div>                
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="row d-inline-flex">
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://www.culinaryhill.com/wp-content/uploads/2020/04/Mojito-Cocktail-Recipe-Culinary-Hill-LR-square.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Mojito</p>
-                            <div class="rating align-middle" data-rate-value=5></div>
-                        </div>                
-                    </div>
-                </div>
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://s3-eu-west-1.amazonaws.com/jamieoliverprod/_int/rdb2/upload/1223_1_1403275789_lrg.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Whisky sour</p>
-                            <div class="rating align-middle" data-rate-value=4.5></div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="col-lg mt-2">
-                    <div class="cocktail-cell shadow">
-                        <img src="https://www.liquor.com/thmb/uXKVc-zQZUPo4hpOEnxJbUiD2qQ=/720x720/filters:fill(auto,1)/__opt__aboutcom__coeus__resources__content_migration__liquor__2017__07__13091447__spanish-gin-and-tonic-720x720-recipe-c700052505244cdcb95f241131870e42.jpg">
-                        <div class="cocktail-cell-description">
-                            <p class="name">Gin & Tonic</p>
-                            <div class="rating align-middle" data-rate-value=4></div>
-                        </div>                
-                    </div>
-                </div>
-
-            </div>
-            <div class="col text-center mt-5">
-                <button id="show-more-btn" class="btn">Show more results</button>
-            </div>
         </div>
 
+        <div class="col text-center mt-1 mb-3">
+            <button id="show-more-btn" class="btn" style="display: none;">Show more results</button>
+        </div>
 
+        <button id="scroll-up" class='btn' style="display: none;"><i class="fas fa-chevron-up"></i></button>
 
     </div>
 <!-- Modal -->
@@ -147,16 +82,53 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-body p-0">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
             <div class="row">
                 <div class="col ml-0 pl-0">
                     <img id="cocktail-modal-img" src="">
                 </div>
-                <div class="col text-center p-3">
-                    <h3 id="cocktail-modal-name"></h3>
+                <div class="col p-3 m-3">
+                    <div class="row">
+                        <div class="col">
+                            <div class="row  justify-content-center">
+                                <h3 id="cocktail-modal-name"></h3>
+                            </div>
+                            <div class="row mb-2 justify-content-center">
+                                <div class="rating" id="selected-drink-rating"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row justify-content-center" id="cocktail-modalingredients">
+                    </div>
+                    <div class="row mt-3">
+                        <h4>Ingredients</h4>
+                    </div>
+                    <div class="row">
+                        <ul id="drink-amounts">
+
+                        </ul>
+                    </div>
+                    <div class="row mt-3">
+                        <h4>Recipe</h4>
+                    </div>
+                    <div class="row">
+                        <p id="drink-recipe"></p>
+                    </div>
                 </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col text-center">
+                <button id="show-reviews-btn" class='btn w-100'>Show reviews<i class="fas fa-chevron-down ml-2"></i></button>
+            </div>
+        </div>
+        <div class="row p-5" id="reviews-container" style="display: none;">
+            <div class="review-container">
+                Review
             </div>
 
         </div>
