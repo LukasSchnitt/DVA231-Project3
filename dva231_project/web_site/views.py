@@ -19,9 +19,9 @@ from .serializers import *
 def home(request):
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
-        return HttpResponse("Hello Moderator")
+        return render(request, 'web_site/index_moderator.html')
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
-        return HttpResponse("Hello Logged in")
+        return render(request, 'web_site/index_user.html')
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
@@ -818,6 +818,6 @@ def cocktails_by_ingredients(request):
 
 def cocktail_by_information(request):
     cocktail_id = int(request.GET["id"])
-    is_personal_cocktail = bool(request.GET['is_personal_cocktail'])
+    is_personal_cocktail = bool(int(request.GET['is_personal_cocktail']))
     json_template = cocktail_information(cocktail_id, is_personal_cocktail)
     return Response(data=json.dumps(json_template))
