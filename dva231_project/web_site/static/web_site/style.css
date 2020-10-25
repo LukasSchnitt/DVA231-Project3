@@ -6,6 +6,36 @@
     max-width: 20rem;
 }
 
+.sub-logo{
+    max-width: 10rem;
+}
+
+.login-input{
+    max-width: 50%;
+}
+
+#login-submit-btn, #register-submit-btn{
+    background-color: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.7);
+    transition: 0.3s;
+}
+
+#login-submit-btn:hover, #register-submit-btn:hover{
+    background-color: rgba(68, 114, 196, 1);
+    color: white;
+    transition: 0.3s;
+
+}
+
+.title-box{
+    background-color: rgba(68, 114, 196, 1);
+    color: white; 
+
+}
+
+.invalid-input{
+    color: red;
+}
 
 .search-btn{
     background-color: rgba(0, 0, 0, 0.05);
