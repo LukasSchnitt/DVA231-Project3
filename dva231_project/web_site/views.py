@@ -512,6 +512,7 @@ def user(request):
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'PUT':  # register
+        # TODO: fix AttributeError("This QueryDict instance is immutable")
         request.data['password'] = hashlib.sha256(request.data['password'].encode()).hexdigest()
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():

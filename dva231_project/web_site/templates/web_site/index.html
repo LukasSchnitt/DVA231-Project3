@@ -130,10 +130,93 @@
             <div class="review-container">
                 Review
             </div>
-
         </div>
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="login-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+            <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="row justify-content-center mt-5">
+                <img src="{% static 'web_site/img/logo.png' %}/" class="img-fluid sub-logo" alt="Cocktail Search">
+            </div>
+            <div class="row justify-content-center mt-5">
+                <label for="login-username">Login</label>
+                <input type="text" class="form-control ml-5 mr-5" id="login-username">
+
+                <label for="login-password" class="mt-3">Password</label>
+                <input type="password" class="form-control ml-5 mr-5" id="login-password">
+
+                <button class="btn w-100 ml-5 mr-5 mt-3" id="login-submit-btn">Login</button>
+            </div>
+            <div class="row w-100 justify-content-center mt-3" id="missing-inputs-login"  style="display:none;">
+                <div class="invalid-input mb-4"  id="missing-inputs-login-label">
+                    <h5 class="invalid-input">Please fill the missing elements.</h5>
+                </div>
+            </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  
+  <div class="modal fade" id="register-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+            <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="row justify-content-center mt-5">
+                <img src="{% static 'web_site/img/logo.png' %}/" class="img-fluid sub-logo" alt="Cocktail Search">
+            </div>
+            <div class="row justify-content-center mt-3 mb-3">
+                <div class="col title-box text-center p-1 shadow">
+                    <h2>Create new account</h2>
+                </div>
+            </div>
+            <div class="row justify-content-center mt-2">
+                <label for="register-username">Login</label>
+                <input type="text" class="form-control ml-5 mr-5" id="register-username">
+
+                <label for="register-password" class="mt-3">Password</label>
+                <input type="password" class="form-control ml-5 mr-5" id="register-password">
+
+                <label for="register-password-retyped" class="mt-3">Retype password</label>
+                <input type="password" class="form-control ml-5 mr-5" id="register-password-retyped">
+
+                
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="radio" name="over-18" id="over-18" value="">
+                    <label class="form-check-label" for="over-18">
+                      I confirm that I am 18 years old or older
+                    </label>
+                </div>
+
+                <button class="btn w-100 ml-5 mr-5 mt-3 mb-4" id="register-submit-btn">Register</button>
+
+                <div class="row w-100 justify-content-center">
+                    <div class="invalid-input mb-4"  id="missing-inputs-registration-label" style="display:none;">
+                        <h5 class="invalid-input">Please fill the missing elements.</h5>
+                    </div>
+                </div>
+
+                <div class="row w-100 justify-content-center">
+                    <div class="invalid-password-retype mb-4" style="display:none;">
+                        <h5 class="invalid-input">Passwords don't match.</h5>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+  </div>
+  </div>
+  
+
 </body>
 </html>

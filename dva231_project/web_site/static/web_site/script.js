@@ -1,5 +1,16 @@
 $( document ).ready(function() {
 
+    $('#login-btn').on('click', function(){
+        $('#login-modal').modal('show');  // show the modal
+    });
+
+    $('#register-btn').on('click', function(){
+        $('#register-modal').modal('show');  // show the modal
+    });
+    $('#over-18').on('change', function(){
+        $('label[for="over-18"]').css('color', '#212529');
+    });
+
     $('#scroll-up').on('click', function(){
         $("html, body").animate({scrollTop: 0}, 1000);
     });
@@ -10,6 +21,24 @@ $( document ).ready(function() {
             $(this).html('Hide reviews<i class="fas fa-chevron-up ml-2">') : 
             $(this).html('Show reviews<i class="fas fa-chevron-down ml-2">');
  
+    });
+
+    $('#register-submit-btn').on('click', function(){
+        if (validate_inputs($(this).parent()) && validate_registration()){
+            $(this).parent().find('.invalid-input').hide();
+            register_user();
+        }
+    });
+
+    $('#login-submit-btn').on('click', function(){
+
+        if (!validate_inputs($(this).parent())){
+            $('#missing-inputs-login').show();
+        } else{
+            $('#missing-inputs-login').hide();
+            login_user();
+
+        }
     });
 
     $('#search-drink-btn').on('click', function(){
@@ -40,6 +69,61 @@ $( document ).ready(function() {
 
 });
 
+function validate_inputs(modal_obj){
+    var i = 0;
+
+    $.each(modal_obj.find('input').not('#over-18'), function() {
+        if (!$(this).val()){
+            $(this).css('border-color', 'red');
+            modal_obj.find('.invalid-input').show();
+        } else{
+            $(this).css('border-color', '#ced4da');
+            i++;
+        }
+    });
+    return (i === modal_obj.find('input').not('#over-18').length);
+}
+
+function validate_registration(){
+
+    if (!$('#over-18').is(':checked')){
+        $('label[for="over-18"]').css('color', 'red');
+        return false;
+    }
+
+    var password = $('#register-password').val();
+    var retyped_password = $('#register-password-retyped').val();
+
+    if (password !== retyped_password){
+        $('.invalid-password-retype').show();
+        return false;
+    } else{
+        $('.invalid-password-retype').hide();
+        return true; 
+    }
+}
+
+function register_user(){
+    var username = $('#register-username').val();
+    var password = $('#register-password').val();
+
+    $.ajax('/user', 
+    {
+        dataType: 'json',
+        method: 'PUT',
+        data: {'username': username, 'password': password},
+        beforeSend: function (xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+        },
+        success: function (data) {
+            alert('chuj kurwa!')
+        }
+    });
+}
+
+function login_user(){
+
+}
 
 function activate_ranking(){
     var options = {
