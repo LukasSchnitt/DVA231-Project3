@@ -7,7 +7,6 @@ from random import getrandbits, choice
 
 import requests
 from django.db.models import Avg
-from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -397,7 +396,7 @@ def get_cocktail_from_api_by_id(cocktail_id):
 
 
 def get_cocktail_from_db_by_id(cocktail_id):
-    cocktail = PersonalCocktail.objects.filter(id=cocktail_id)
+    cocktail = PersonalCocktail.objects.get(id=cocktail_id)
     if not cocktail:
         return []
     cocktail_template = {
