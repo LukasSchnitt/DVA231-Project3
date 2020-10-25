@@ -37,7 +37,6 @@ $( document ).ready(function() {
         } else{
             $('#missing-inputs-login').hide();
             login_user();
-
         }
     });
 
@@ -115,14 +114,42 @@ function register_user(){
         beforeSend: function (xhr, settings) {
             xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
         },
-        success: function (data) {
-            alert('chuj kurwa!')
-        }
+        statusCode: {
+            201: function() {
+              alert( "success" );
+            },
+            400: function(){
+                alert("error")
+            }
+          }
     });
 }
 
 function login_user(){
+    var username = $('#login-username').val();
+    var password = $('#login-password').val();
 
+
+    $.ajax('/user', 
+    {
+        dataType: 'json',
+        method: 'POST',
+        data: {'username': username, 'password': password},
+        beforeSend: function (xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+        },
+        statusCode: {
+            200: function() {
+              alert( "success" );
+            },
+            403: function(){
+                alert("banned")
+            },
+            404: function(){
+                alert("error")
+            }
+          }
+    });
 }
 
 function activate_ranking(){
