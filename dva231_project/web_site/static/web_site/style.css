@@ -27,6 +27,10 @@
 
 }
 
+#profile-btn{
+    color: rgba(68, 114, 196, 1) !important;
+}
+
 .title-box{
     background-color: rgba(68, 114, 196, 1);
     color: white; 

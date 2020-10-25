@@ -25,7 +25,7 @@ $( document ).ready(function() {
 
     $('#register-submit-btn').on('click', function(){
         if (validate_inputs($(this).parent()) && validate_registration()){
-            $(this).parent().find('.invalid-input').hide();
+            $('#missing-inputs-registration-label').hide();
             register_user();
         }
     });
@@ -37,8 +37,55 @@ $( document ).ready(function() {
         } else{
             $('#missing-inputs-login').hide();
             login_user();
-
         }
+    });
+
+    $('#logout-btn').on('click', function(){
+        $.ajax('/user', 
+        {
+            method: 'HEAD',
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            }
+        });
+    });
+
+    $('#random-drink-btn').on('click', function(){
+        $.ajax('/cocktail', 
+        {
+            dataType: 'json', // type of response data
+            data: {'random': 1},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            success: function (data) {
+                data = JSON.parse(data).random_cocktail;
+                $('#cocktail-modal-img').attr('src', data.picture);  // set the image
+                $('#cocktail-modal-name').text(data.name)  // set the title
+
+                $.each(data.ingredients, function(k, val){
+                    $('#cocktail-modalingredients').append(
+                        "<p class='ingredient'>" + k + "</p>"
+                    );
+                
+                    if (val == null){
+                        $('#drink-amounts').append(
+                            "<li class='amount'>" + k + "</li>"
+                        );
+                    } else{
+                        $('#drink-amounts').append(
+                            "<li class='amount'>" + k + ": " + val + "</li>"
+                        );
+                    }
+                });
+                
+                $('#drink-recipe').text(data.recipe);
+    
+                activate_ranking();
+                $('#selected-drink-rating').rate("setValue", data.rating);
+                $('#cocktail-modal').modal('show');  // show the modal
+            }
+        });
     });
 
     $('#search-drink-btn').on('click', function(){
@@ -64,7 +111,6 @@ $( document ).ready(function() {
         }, 1000);
         $('#scroll-up').fadeIn();
 
-
     });
 
 });
@@ -75,7 +121,7 @@ function validate_inputs(modal_obj){
     $.each(modal_obj.find('input').not('#over-18'), function() {
         if (!$(this).val()){
             $(this).css('border-color', 'red');
-            modal_obj.find('.invalid-input').show();
+            $('#missing-inputs-registration-label').show();
         } else{
             $(this).css('border-color', '#ced4da');
             i++;
@@ -95,10 +141,10 @@ function validate_registration(){
     var retyped_password = $('#register-password-retyped').val();
 
     if (password !== retyped_password){
-        $('.invalid-password-retype').show();
+        $('#invalid-password-retype').show();
         return false;
     } else{
-        $('.invalid-password-retype').hide();
+        $('#invalid-password-retype').hide();
         return true; 
     }
 }
@@ -115,14 +161,45 @@ function register_user(){
         beforeSend: function (xhr, settings) {
             xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
         },
-        success: function (data) {
-            alert('chuj kurwa!')
-        }
+        statusCode: {
+            201: function() {
+              alert( "success" );
+            },
+            226: function(){
+                $('#username-taken').show();
+            },
+            400: function(){
+                alert("error")
+            }
+          }
     });
 }
 
 function login_user(){
+    var username = $('#login-username').val();
+    var password = $('#login-password').val();
 
+
+    $.ajax('/user', 
+    {
+        dataType: 'json',
+        method: 'POST',
+        data: {'username': username, 'password': password},
+        beforeSend: function (xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+        },
+        statusCode: {
+            200: function() {
+              alert( "success" );
+            },
+            403: function(){
+                alert("banned")
+            },
+            404: function(){
+                alert("error")
+            }
+          }
+    });
 }
 
 function activate_ranking(){
@@ -157,7 +234,6 @@ function fill_drink_container(data){
         $('#no-drinks-info').hide();
         $('#show-more-btn').fadeIn(200);
     }
-
 
     $.each(data_api, function(i, val) {
         if (i%3 == 0){ $('#drinks-grid-container').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
@@ -197,16 +273,16 @@ function activate_cells(ingredients){
         var id = $(this).attr('id');
         $('#cocktail-modal-img').attr('src', $(this).find('img').attr('src'));  // set the image
         $('#cocktail-modal-name').text($(this).find('.name').text())  // set the title
-        get_cocktail_deatils(id.substring(), ingredients);
+        get_cocktail_details(id.substring(), ingredients);
         $('#cocktail-modal').modal('show');  // show the modal
     })
 }
 
-function get_cocktail_deatils(id, query_ingredients){
+function get_cocktail_details(id, query_ingredients){
     $.ajax('/cocktail', 
     {
         dataType: 'json', 
-        data: {'id': id},
+        data: {'id': id, 'is_personal_cocktail': $('#' + id).attr('from-db')},
         beforeSend: function (xhr, settings) {
             xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
         },
