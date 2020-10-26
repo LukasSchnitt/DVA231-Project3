@@ -15,6 +15,7 @@ class IngredientsList(models.Model):
 class PersonalCocktail(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+    blacklisted = models.BooleanField(default=False)
     description = models.CharField(max_length=500)
     picture = models.CharField(max_length=25)
     recipe = models.TextField()
@@ -31,6 +32,7 @@ class CocktailIngredients(models.Model):
 
 class Review(models.Model):
     class RatingValue(models.IntegerChoices):
+        SUPER_BAD = 0
         BAD = 1
         OK = 2
         GOOD = 3
@@ -39,7 +41,7 @@ class Review(models.Model):
 
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     cocktail_id = models.IntegerField()
-    is_personal_cocktail = models.BooleanField()
+    is_personal_cocktail = models.BooleanField(default=True)
     rating = models.IntegerField(default=RatingValue.PERFECT, choices=RatingValue.choices)
     comment = models.CharField(max_length=500)
 

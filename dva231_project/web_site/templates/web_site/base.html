@@ -32,7 +32,6 @@
 <body>
     {% block header %}
     {% endblock %}
-
     <div class="container" id="page-container">
         <!-- Part containing the searchbox, i.e. the first page -->
         <div class="row" id="search-container">
@@ -72,6 +71,8 @@
     </div>
 <!-- Modal -->
 <div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <meta id="selected-drink-id" value="">
+    <meta id="selected-drink-from-local-db" value="">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-body p-0">
@@ -120,9 +121,34 @@
             </div>
         </div>
         <div class="row p-5" id="reviews-container" style="display: none;">
-            <div class="review-container">
-                Review
+
+            <div class="review-container w-100 mb-3">
+                <label class="review-username d-inline">Username</label>
+                <div class="review-text-wrapper w-100">
+                    <div class="rating review-rating"></div>
+                    <p>Some text in the review</p>
+                </div>
             </div>
+
+            <div class="review-container w-100 mb-3">
+                <label class="review-username d-inline">Another_username</label>
+                <div class="review-text-wrapper w-100">
+                    <div class="rating review-rating"></div>
+                    <p>And some other review</p>
+                </div>
+            </div>
+
+            {% if is_authenticated %}
+            <div class="review-container w-100 mb-3">
+                <div class="w-100">
+                    <h5>Add review</h5>
+                    <div class="rating review-rating" id="review-rating-submit"></div>
+                    <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
+                    <button id="submit-review" class="btn float-right mt-2">Submit review</button>
+                </div>
+            </div>
+            {% endif %}
+
         </div>
       </div>
     </div>
@@ -139,7 +165,7 @@
                 <img src="{% static 'web_site/img/logo.png' %}/" class="img-fluid sub-logo" alt="Cocktail Search">
             </div>
             <div class="row justify-content-center mt-5">
-                <label for="login-username">Login</label>
+                <label for="login-username">Username</label>
                 <input type="text" class="form-control ml-5 mr-5" id="login-username">
 
                 <label for="login-password" class="mt-3">Password</label>
@@ -150,6 +176,16 @@
             <div class="row w-100 justify-content-center mt-3" id="missing-inputs-login"  style="display:none;">
                 <div class="invalid-input mb-4"  id="missing-inputs-login-label">
                     <h5 class="invalid-input">Please fill the missing elements.</h5>
+                </div>
+            </div>
+            <div class="row w-100 justify-content-center mt-3" id="login-404"  style="display:none;">
+                <div class="invalid-input mb-4">
+                    <h5 class="invalid-input">Invalid credentials, please try again.</h5>
+                </div>
+            </div>
+            <div class="row w-100 justify-content-center mt-3" id="login-403"  style="display:none;">
+                <div class="invalid-input mb-4" >
+                    <h5 class="invalid-input">This account has been banned.</h5>
                 </div>
             </div>
       </div>
@@ -173,7 +209,7 @@
                 </div>
             </div>
             <div class="row justify-content-center mt-2">
-                <label for="register-username">Login</label>
+                <label for="register-username">Username</label>
                 <input type="text" class="form-control ml-5 mr-5" id="register-username">
 
                 <label for="register-password" class="mt-3">Password</label>
@@ -207,6 +243,18 @@
                 <div class="row w-100 justify-content-center"  id="username-taken" style="display:none;">
                     <div class="mb-4">
                         <h5 class="invalid-input">This username is already taken.</h5>
+                    </div>
+                </div>
+
+                <div class="row w-100 justify-content-center"  id="register-404" style="display:none;">
+                    <div class="mb-4">
+                        <h5 class="invalid-input">Something went wrong, please try again.</h5>
+                    </div>
+                </div>
+
+                <div class="row w-100 justify-content-center"  id="registration-success" style="display:none;">
+                    <div class="mb-4">
+                        <h5 class="success-input">Registration successful!</h5>
                     </div>
                 </div>
 
