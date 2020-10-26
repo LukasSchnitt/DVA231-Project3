@@ -361,8 +361,10 @@ def review_delete(request):
 '''
 
 
-def get_cocktail_from_api_by_id(cocktail_id):
-    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(cocktail_id))
+def get_cocktail_from_api_by_id(id):
+    if CocktailBlacklist.objects.filter(cocktail_id = id).exists():
+        return []
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(id))
     try:
         data = response.json()
     except ValueError:
@@ -373,7 +375,7 @@ def get_cocktail_from_api_by_id(cocktail_id):
     cocktail_template = {
         "name": cocktail_data["strDrink"],
         "picture": cocktail_data["strDrinkThumb"],
-        "id": cocktail_id,
+        "id": id,
         "recipe": cocktail_data["strInstructions"]
     }
     ingredients = {}
@@ -381,7 +383,7 @@ def get_cocktail_from_api_by_id(cocktail_id):
         if cocktail_data["strIngredient" + str(i + 1)] is not None:
             ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
     cocktail_template["ingredients"] = ingredients
-    reviews = Review.objects.filter(cocktail_id=cocktail_id, is_personal_cocktail=False)
+    reviews = Review.objects.filter(cocktail_id=id, is_personal_cocktail=False)
     if reviews:
         cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
     return cocktail_template
@@ -675,6 +677,8 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
             cocktail_list = PersonalCocktail.objects.all()
 
         for cocktail in cocktail_list:
+            if cocktail.blacklisted:
+                continue
             if ingredient_object in cocktail.ingredients.all():
                 cocktail_template = {
                     "name": cocktail.name,
@@ -735,14 +739,17 @@ def cocktail_information(cocktail_id, is_personal_cocktail):
 
 def user_cocktails(uid):
     if uid is None:
-        cocktail_template = {"user_cocktails": []}
+        cocktail_template = {"user_cocktails": [], "blacklist_cocktails" : []}
         for cocktail in PersonalCocktail.objects.all():
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id, True))
         return cocktail_template
     if PersonalCocktail.objects.filter(user_id=uid).exists():
         cocktail_template = {"user_id": str(uid), "user_cocktails": []}
         for cocktail in PersonalCocktail.objects.filter(user_id=uid):
-            cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id, True))
+            if cocktial.blacklisted:
+                cocktail_template["blacklist_cocktails"].append(cocktail_information(cocktail.id, True))
+            else:
+                cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id, True))
         return cocktail_template
     return []
 
@@ -761,6 +768,11 @@ def random_cocktail_from_API():
     response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/random.php")
     data = response.json()
     cocktail_data = data["drinks"][0]
+    while(CocktailBlacklist.objects.filter(cocktail_id=cocktail_data['idDrink']).exists()):
+        response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/random.php")
+        data = response.json()
+        cocktail_data = data["drinks"][0]
+        
     cocktail_template = {
         "name": cocktail_data["strDrink"],
         "picture": cocktail_data["strDrinkThumb"],
@@ -779,7 +791,7 @@ def random_cocktail_from_API():
 
 
 def random_cocktail_from_DB():
-    cocktails = PersonalCocktail.objects.all()
+    cocktails = PersonalCocktail.objects.filter(blacklisted=False)
     cocktail = choice(cocktails)
     return cocktail_information(cocktail.id, True)
 
