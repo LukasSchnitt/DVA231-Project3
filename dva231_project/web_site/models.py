@@ -30,6 +30,11 @@ class CocktailIngredients(models.Model):
     centiliters = models.FloatField()
 
 
+class NotifyCocktail(models.Model):
+    cocktail_id = models.ForeignKey(PersonalCocktail, on_delete=models.CASCADE)
+    confirmed = models.BooleanField(default=False)
+
+
 class Review(models.Model):
     class RatingValue(models.IntegerChoices):
         SUPER_BAD = 0

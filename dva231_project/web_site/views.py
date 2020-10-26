@@ -20,7 +20,7 @@ def home(request):
             request.session['is_logged_in'] and request.session['is_moderator']:
         return render(request, 'web_site/index_moderator.html')
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
-        return render(request, 'web_site/index_user.html',  {"is_authenticated":True})
+        return render(request, 'web_site/index_user.html', {"is_authenticated": True})
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
@@ -36,6 +36,54 @@ def cocktail_API(request):
         if 'random' in request.GET and request.GET['random']:
             return random_cocktail()
     return personal_cocktail(request)
+
+
+'''
+    This API works only for users that are logged in, otherwise:
+        @returns HTTP STATUS 401
+    Allowed Request Methods:
+        - GET : used to retrieve the notifications list
+                @returns a list containing
+                        cocktail_id : integer unique identifier of the personal cocktail
+                        notification_id : integer unique identifier of the notification 
+        - POST : used to confirm that the user have seen the notification
+                @param notifications : array containing all the notification_id to confirm
+                @returns HTTP STATUS 200 after all notifications have been confirmed
+'''
+
+
+@api_view(['GET', 'POST'])
+def notifications(request):
+    if not ('is_logged_in' in request.session and request.session['is_logged_in']):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'GET':
+        return notifications_list(request.session['id'])
+    elif request.method == 'POST':
+        return notifications_confirm(request.data['notifications'])
+    return Response(status=status.HTTP_409_CONFLICT)
+
+
+def notifications_list(user_id):
+    cocktail_list = user_cocktails(user_id)
+    out = []
+    if not cocktail_list['blacklist_cocktails']:
+        return Response(data=out)
+    for cocktail in cocktail_list['blacklist_cocktails']:
+        elem = NotifyCocktail.objects.get(cocktail_id=cocktail['id'])
+        if not elem.confirmed:
+            out.append({
+                'cocktail_id': cocktail['id'],
+                'notification_id': elem.id
+            })
+    return Response(data=out)
+
+
+def notifications_confirm(confirmed_notifications):
+    for notification in confirmed_notifications:
+        element = NotifyCocktail.objects.get(id=notification)
+        element.confirmed = True
+        element.save()
+    return Response(status=status.HTTP_200_OK)
 
 
 '''
@@ -227,9 +275,22 @@ def personal_cocktail_delete(request):
     try:
         if 'is_moderator' in request.session and request.session['is_moderator'] and 'cocktail_id' in request.data:
             user_cocktail = PersonalCocktail.objects.get(id=request.data['cocktail_id'])
+            user_cocktail.blacklisted = not user_cocktail.blacklisted
+            if user_cocktail.blacklisted:
+                data_for_serializer = {
+                    'cocktail_id': request.data['cocktail_id']
+                }
+                serializer = NotifyCocktailSerializer(data=data_for_serializer)
+                if not serializer.is_valid():
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                serializer.save()
+            else:
+                notification = NotifyCocktail.objects.get(cocktail_id=request.data['cocktail_id'])
+                notification.delete()
+            user_cocktail.save()
         else:
             user_cocktail = PersonalCocktail.objects.get(id=request.data['id'], user_id=request.session['id'])
-        user_cocktail.delete()
+            user_cocktail.delete()
         return Response(status=status.HTTP_200_OK)
     except PersonalCocktail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -361,10 +422,10 @@ def review_delete(request):
 '''
 
 
-def get_cocktail_from_api_by_id(id):
-    if CocktailBlacklist.objects.filter(cocktail_id = id).exists():
+def get_cocktail_from_api_by_id(cocktail_id):
+    if CocktailBlacklist.objects.filter(cocktail_id=cocktail_id).exists():
         return []
-    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(id))
+    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(cocktail_id))
     try:
         data = response.json()
     except ValueError:
@@ -375,7 +436,7 @@ def get_cocktail_from_api_by_id(id):
     cocktail_template = {
         "name": cocktail_data["strDrink"],
         "picture": cocktail_data["strDrinkThumb"],
-        "id": id,
+        "id": cocktail_id,
         "recipe": cocktail_data["strInstructions"]
     }
     ingredients = {}
@@ -383,7 +444,7 @@ def get_cocktail_from_api_by_id(id):
         if cocktail_data["strIngredient" + str(i + 1)] is not None:
             ingredients[cocktail_data["strIngredient" + str(i + 1)]] = cocktail_data["strMeasure" + str(i + 1)]
     cocktail_template["ingredients"] = ingredients
-    reviews = Review.objects.filter(cocktail_id=id, is_personal_cocktail=False)
+    reviews = Review.objects.filter(cocktail_id=cocktail_id, is_personal_cocktail=False)
     if reviews:
         cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
     return cocktail_template
@@ -739,14 +800,14 @@ def cocktail_information(cocktail_id, is_personal_cocktail):
 
 def user_cocktails(uid):
     if uid is None:
-        cocktail_template = {"user_cocktails": [], "blacklist_cocktails" : []}
+        cocktail_template = {"user_cocktails": [], "blacklist_cocktails": []}
         for cocktail in PersonalCocktail.objects.all():
             cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id, True))
         return cocktail_template
     if PersonalCocktail.objects.filter(user_id=uid).exists():
         cocktail_template = {"user_id": str(uid), "user_cocktails": []}
         for cocktail in PersonalCocktail.objects.filter(user_id=uid):
-            if cocktial.blacklisted:
+            if cocktail.blacklisted:
                 cocktail_template["blacklist_cocktails"].append(cocktail_information(cocktail.id, True))
             else:
                 cocktail_template["user_cocktails"].append(cocktail_information(cocktail.id, True))
@@ -765,14 +826,13 @@ def user_cocktails(uid):
 
 
 def random_cocktail_from_API():
-    response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/random.php")
-    data = response.json()
-    cocktail_data = data["drinks"][0]
-    while(CocktailBlacklist.objects.filter(cocktail_id=cocktail_data['idDrink']).exists()):
+    while True:
         response = requests.get("https://www.thecocktaildb.com/api/json/v1/1/random.php")
         data = response.json()
         cocktail_data = data["drinks"][0]
-        
+        if not CocktailBlacklist.objects.filter(cocktail_id=cocktail_data['idDrink']).exists():
+            break
+
     cocktail_template = {
         "name": cocktail_data["strDrink"],
         "picture": cocktail_data["strDrinkThumb"],
@@ -834,6 +894,7 @@ def cocktail_by_information(request):
     json_template = cocktail_information(cocktail_id, is_personal_cocktail)
     return Response(data=json.dumps(json_template))
 
+
 @api_view(['GET'])
 def test(request):
     """
@@ -844,4 +905,4 @@ def test(request):
     data['review'] = review.aggregate(Avg('rating'))['rating__avg']
     return Response(data=json.dumps(data))
     """
-    return Response
+    return Response(status=status.HTTP_204_NO_CONTENT)
