@@ -31,6 +31,7 @@ class CocktailIngredients(models.Model):
 
 class Review(models.Model):
     class RatingValue(models.IntegerChoices):
+        SUPER_BAD = 0
         BAD = 1
         OK = 2
         GOOD = 3

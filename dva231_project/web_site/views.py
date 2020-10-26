@@ -383,7 +383,7 @@ def get_cocktail_from_api_by_id(cocktail_id):
     cocktail_template["ingredients"] = ingredients
     reviews = Review.objects.filter(cocktail_id=cocktail_id, is_personal_cocktail=False)
     if reviews:
-        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
     return cocktail_template
 
 
@@ -415,7 +415,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
     cocktail_template["ingredients"] = ingredients
     reviews = Review.objects.filter(cocktail_id=cocktail_id, is_personal_cocktail=True)
     if reviews:
-        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
     return cocktail_template
 
 
@@ -641,9 +641,8 @@ def get_cocktail_from_API_by_ingredients(ingredient_list):
                     "id": cocktail['idDrink']
                 }
                 reviews = Review.objects.filter(cocktail_id=cocktail['idDrink'], is_personal_cocktail=False)
-                # if reviews:
-                #     # TODO: fix KeyError: 'rating' 
-                #     cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+                if reviews:
+                    cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
                 if cocktail_template not in json_template:
                     json_template.append(cocktail_template.copy())
     return json_template
@@ -688,7 +687,7 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
                 }
                 reviews = Review.objects.filter(cocktail_id=cocktail_template["id"], is_personal_cocktail=True)
                 if reviews:
-                    cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+                    cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
                 if cocktail_template not in json_template:
                     json_template.append(cocktail_template.copy())
     return json_template
@@ -775,7 +774,7 @@ def random_cocktail_from_API():
     cocktail_template["ingredients"] = ingredients
     reviews = Review.objects.filter(cocktail_id=cocktail_data['idDrink'], is_personal_cocktail=False)
     if reviews:
-        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+        cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating__avg']
     return cocktail_template
 
 
@@ -822,3 +821,15 @@ def cocktail_by_information(request):
     is_personal_cocktail = bool(int(request.GET['is_personal_cocktail']))
     json_template = cocktail_information(cocktail_id, is_personal_cocktail)
     return Response(data=json.dumps(json_template))
+
+@api_view(['GET'])
+def test(request):
+    """
+    for testing
+
+    review = Review.objects.filter(id=1)
+    data = {}
+    data['review'] = review.aggregate(Avg('rating'))['rating__avg']
+    return Response(data=json.dumps(data))
+    """
+    return Response
