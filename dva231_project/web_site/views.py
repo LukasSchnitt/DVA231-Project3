@@ -20,7 +20,7 @@ def home(request):
             request.session['is_logged_in'] and request.session['is_moderator']:
         return render(request, 'web_site/index_moderator.html')
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
-        return render(request, 'web_site/index_user.html')
+        return render(request, 'web_site/index_user.html',  {"is_authenticated":True})
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
@@ -308,10 +308,11 @@ def review_add(request):
     data_for_serializer = {
         'user_id': request.session['id'],
         'cocktail_id': request.data['cocktail_id'],
-        'is_personal_cocktail': request.data['is_personal_cocktail'],
+        'is_personal_cocktail': bool(int(request.data['is_personal_cocktail'])),
         'rating': request.data['rating'],
         'comment': request.data['comment']
     }
+    print(data_for_serializer)
     serializer = ReviewSerializer(data=data_for_serializer)
     if serializer.is_valid():
         serializer.save()
@@ -640,8 +641,9 @@ def get_cocktail_from_API_by_ingredients(ingredient_list):
                     "id": cocktail['idDrink']
                 }
                 reviews = Review.objects.filter(cocktail_id=cocktail['idDrink'], is_personal_cocktail=False)
-                if reviews:
-                    cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
+                # if reviews:
+                #     # TODO: fix KeyError: 'rating' 
+                #     cocktail_template["rating"] = reviews.aggregate(Avg('rating'))['rating']
                 if cocktail_template not in json_template:
                     json_template.append(cocktail_template.copy())
     return json_template

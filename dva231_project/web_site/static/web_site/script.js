@@ -20,8 +20,32 @@ $( document ).ready(function() {
         $(this).text()==='Show reviews' ? 
             $(this).html('Hide reviews<i class="fas fa-chevron-up ml-2">') : 
             $(this).html('Show reviews<i class="fas fa-chevron-down ml-2">');
- 
     });
+
+    $('#submit-review').on('click', function(){
+        var rating = $('#review-rating-submit').rate("getValue");
+        var review = $('#add-review-text').val();
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+
+        $.ajax('/review', 
+        {
+            method: 'POST',
+            dataType: 'json',
+            // TODO
+            data: {'rating': rating, 'comment': review, 'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                  location.reload()
+                }
+              }
+        });
+        
+    })
 
     $('#register-submit-btn').on('click', function(){
         if (validate_inputs($(this).parent()) && validate_registration()){
@@ -46,11 +70,18 @@ $( document ).ready(function() {
             method: 'HEAD',
             beforeSend: function (xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
-            }
+            },
+            statusCode: {
+                200: function() {
+                  location.reload()
+                }
+              }
         });
     });
 
     $('#random-drink-btn').on('click', function(){
+        $('#cocktail-modalingredients').empty();
+        $('#drink-amounts').empty();
         $.ajax('/cocktail', 
         {
             dataType: 'json', // type of response data
@@ -59,6 +90,9 @@ $( document ).ready(function() {
                 xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
             },
             success: function (data) {
+                
+                var from_db = JSON.parse(data).source === "DB" ? 1 : 0;
+
                 data = JSON.parse(data).random_cocktail;
                 $('#cocktail-modal-img').attr('src', data.picture);  // set the image
                 $('#cocktail-modal-name').text(data.name)  // set the title
@@ -82,6 +116,10 @@ $( document ).ready(function() {
                 $('#drink-recipe').text(data.recipe);
     
                 activate_ranking();
+
+                $('#selected-drink-id').attr('value', data.id);
+                $('#selected-drink-from-local-db').attr('value', from_db);
+
                 $('#selected-drink-rating').rate("setValue", data.rating);
                 $('#cocktail-modal').modal('show');  // show the modal
             }
@@ -163,13 +201,13 @@ function register_user(){
         },
         statusCode: {
             201: function() {
-              alert( "success" );
+              $('#registration-success').show();
             },
             226: function(){
                 $('#username-taken').show();
             },
             400: function(){
-                alert("error")
+                $('#egister-404').show(); 
             }
           }
     });
@@ -190,13 +228,13 @@ function login_user(){
         },
         statusCode: {
             200: function() {
-              alert( "success" );
+                location.reload();
             },
             403: function(){
-                alert("banned")
+                $('#login-403').show();
             },
             404: function(){
-                alert("error")
+                $('#login-404').show();
             }
           }
     });
@@ -217,6 +255,7 @@ function activate_ranking(){
     }
     
         $("#selected-drink-rating").rate(options);
+        $('.rating').rate(options);
 }
 
 function fill_drink_container(data){
@@ -243,7 +282,7 @@ function fill_drink_container(data){
                     '<img src="' + val.picture + '">' +
                     '<div class="cocktail-cell-description">' +
                         '<p class="name">' + val.name + '</p>' +
-                        '<div class="rating align-middle" data-rate-value=5></div>' +
+                        // '<div class="rating align-middle" data-rate-value=5></div>' +
                     '</div> ' +              
                 '</div>' +
             '</div>'
@@ -258,7 +297,7 @@ function fill_drink_container(data){
                     '<img src="' + val.picture + '">' +
                     '<div class="cocktail-cell-description">' +
                         '<p class="name">' + val.name + '</p>' +
-                        '<div class="rating align-middle" data-rate-value=5></div>' +
+                        // '<div class="rating align-middle" data-rate-value=5></div>' +
                     '</div> ' +              
                 '</div>' +
             '</div>'
@@ -269,8 +308,17 @@ function fill_drink_container(data){
 
 function activate_cells(ingredients){
     $('.cocktail-cell').on('click', function(){
+        $('#cocktail-modalingredients').empty();
+        $('#drink-amounts').empty();
+        $('#reviews-container').hide();
+        $('#show-reviews-btn').html('Show reviews<i class="fas fa-chevron-down ml-2">');
         // this handles clicking on cocktail to get more information
         var id = $(this).attr('id');
+
+        $('#selected-drink-id').attr('value', id);
+        $('#selected-drink-from-local-db').attr('value', $(this).attr('from-db'));
+
+
         $('#cocktail-modal-img').attr('src', $(this).find('img').attr('src'));  // set the image
         $('#cocktail-modal-name').text($(this).find('.name').text())  // set the title
         get_cocktail_details(id.substring(), ingredients);
@@ -279,6 +327,7 @@ function activate_cells(ingredients){
 }
 
 function get_cocktail_details(id, query_ingredients){
+    
     $.ajax('/cocktail', 
     {
         dataType: 'json', 
@@ -288,8 +337,6 @@ function get_cocktail_details(id, query_ingredients){
         },
         success: function (data) {
             data = JSON.parse(data);
-            $('#cocktail-modalingredients').empty();
-            $('#drink-amounts').empty();
 
             $.each(data.ingredients, function(k, val){
                 if (query_ingredients.toLowerCase().includes(k.toLowerCase())){
