@@ -17,9 +17,30 @@ $( document ).ready(function() {
 
     $('#show-reviews-btn').on('click', function(){
         $('#reviews-container').slideToggle(400);
+
         $(this).text()==='Show reviews' ? 
             $(this).html('Hide reviews<i class="fas fa-chevron-up ml-2">') : 
             $(this).html('Show reviews<i class="fas fa-chevron-down ml-2">');
+       
+    
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+        $.ajax('/review', 
+        {
+            method: 'GET',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function(data) {
+                    fill_reviews(data);
+                }
+              }
+        });
+
     });
 
     $('#submit-review').on('click', function(){
@@ -40,7 +61,7 @@ $( document ).ready(function() {
             },
             statusCode: {
                 200: function() {
-                  location.reload()
+
                 }
               }
         });
@@ -80,6 +101,12 @@ $( document ).ready(function() {
     });
 
     $('#random-drink-btn').on('click', function(){
+
+        $('#selected-drink-rating').remove();
+        $('#selected-drink-ranking-container').append(
+            '<div class="rating" id="selected-drink-rating"></div>'
+        );
+
         $('#cocktail-modalingredients').empty();
         $('#drink-amounts').empty();
         $.ajax('/cocktail', 
@@ -115,12 +142,28 @@ $( document ).ready(function() {
                 
                 $('#drink-recipe').text(data.recipe);
     
-                activate_ranking();
+                // activate_ranking();
 
                 $('#selected-drink-id').attr('value', data.id);
                 $('#selected-drink-from-local-db').attr('value', from_db);
 
-                $('#selected-drink-rating').rate("setValue", data.rating);
+                var rating;
+                if (data.rating == null){
+                    rating = 0;
+                } else{
+                    rating = data.rating;
+                }
+    
+                var options = {
+                    max_value: 5,
+                    step_size: 0.5,
+                    initial_value: rating,
+                    selected_symbol_type: 'utf8_star', // Must be a key from symbols
+                    cursor: 'normal',
+                    readonly: true,
+                }
+                
+                $("#selected-drink-rating").rate(options);
                 $('#cocktail-modal').modal('show');  // show the modal
             }
         });
@@ -152,6 +195,38 @@ $( document ).ready(function() {
     });
 
 });
+
+function fill_reviews(data){
+
+    $('#review-rating-submit').rate()
+
+    var options = {
+        max_value: 5,
+        step_size: 0.5,
+        initial_value: 0,
+        selected_symbol_type: 'utf8_star', // Must be a key from symbols
+        cursor: 'normal',
+        readonly: true,
+        change_once: true, // Determines if the rating can only be set once
+    }
+
+    $('#reviews-from-db-container').empty();
+
+    $.each(data, function(i, review_obj){
+        $('#reviews-from-db-container').append(
+            '<div class="review-container w-100 mb-3">' + 
+                '<label class="review-username d-inline">' + 'username' + '</label>' + 
+                '<div class="review-text-wrapper w-100">' + 
+                    '<div class="rating review-rating" id="' + review_obj.id +'"></div>' +
+                    '<p>' + review_obj.comment + '</p>' + 
+                '</div>' +
+        '</div>'
+        );
+        options.initial_value = review_obj.rating;
+        $('#' + review_obj.id).rate(options);
+    })
+
+}
 
 function validate_inputs(modal_obj){
     var i = 0;
@@ -249,9 +324,6 @@ function activate_ranking(){
         cursor: 'normal',
         readonly: false,
         change_once: true, // Determines if the rating can only be set once
-        ajax_method: 'POST',
-        url: 'http://localhost/test.php',
-        additional_data: {} // Additional data to send to the server
     }
     
         $("#selected-drink-rating").rate(options);
@@ -327,7 +399,12 @@ function activate_cells(ingredients){
 }
 
 function get_cocktail_details(id, query_ingredients){
-    
+
+    $('#selected-drink-rating').remove();
+    $('#selected-drink-ranking-container').append(
+        '<div class="rating" id="selected-drink-rating"></div>'
+    );
+
     $.ajax('/cocktail', 
     {
         dataType: 'json', 
@@ -362,8 +439,23 @@ function get_cocktail_details(id, query_ingredients){
             
             $('#drink-recipe').text(data.recipe);
 
-            activate_ranking();
-            $('#selected-drink-rating').rate("setValue", data.rating);
+            var rating;
+            if (data.rating == null){
+                rating = 0;
+            } else{
+                rating = data.rating;
+            }
+
+            var options = {
+                max_value: 5,
+                step_size: 0.5,
+                initial_value: rating,
+                selected_symbol_type: 'utf8_star', // Must be a key from symbols
+                cursor: 'normal',
+                readonly: true,
+            }
+            
+            $("#selected-drink-rating").rate(options);
 
         }
     });

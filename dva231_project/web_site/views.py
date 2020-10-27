@@ -25,6 +25,10 @@ def home(request):
     template_name = 'web_site/index.html'
     return render(request, template_name)
 
+def profile(request):
+    template_name = 'web_site/profile.html'
+    return render(request, template_name)
+
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def cocktail_API(request):
@@ -341,6 +345,10 @@ def personal_cocktail_delete(request):
 '''
 
 
+# TODO: - I need the username from GET
+#       - for POST, server needs to check if the user added the review before
+#         if that's the case, the error status should be sent to prevent it
+#         and the review should not be added
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def review(request):
     if request.method == 'GET':
