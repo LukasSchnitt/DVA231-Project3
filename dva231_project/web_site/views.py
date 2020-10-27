@@ -741,8 +741,9 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
     json_template = []
 
     for ingredient in ingredient_list:
-        ingredient_object = IngredientsList.objects.get(name=str(ingredient))
-        if not ingredient_object:
+        try:
+            ingredient_object = IngredientsList.objects.get(name=str(ingredient))
+        except IngredientsList.DoesNotExist:
             continue
         if alcoholic is None:
             cocktail_list = PersonalCocktail.objects.all()
