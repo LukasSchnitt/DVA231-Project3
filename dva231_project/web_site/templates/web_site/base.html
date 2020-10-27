@@ -89,7 +89,7 @@
                             <div class="row  justify-content-center">
                                 <h3 id="cocktail-modal-name"></h3>
                             </div>
-                            <div class="row mb-2 justify-content-center">
+                            <div class="row mb-2 justify-content-center" id="selected-drink-ranking-container">
                                 <div class="rating" id="selected-drink-rating"></div>
                             </div>
                         </div>
@@ -122,21 +122,10 @@
         </div>
         <div class="row p-5" id="reviews-container" style="display: none;">
 
-            <div class="review-container w-100 mb-3">
-                <label class="review-username d-inline">Username</label>
-                <div class="review-text-wrapper w-100">
-                    <div class="rating review-rating"></div>
-                    <p>Some text in the review</p>
-                </div>
+            <div id="reviews-from-db-container" class="w-100">
+
             </div>
 
-            <div class="review-container w-100 mb-3">
-                <label class="review-username d-inline">Another_username</label>
-                <div class="review-text-wrapper w-100">
-                    <div class="rating review-rating"></div>
-                    <p>And some other review</p>
-                </div>
-            </div>
 
             {% if is_authenticated %}
             <div class="review-container w-100 mb-3">
