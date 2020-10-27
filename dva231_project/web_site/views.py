@@ -25,6 +25,7 @@ def home(request):
     template_name = 'web_site/index.html'
     return render(request, template_name)
 
+
 def profile(request):
     template_name = 'web_site/profile.html'
     return render(request, template_name)
@@ -345,10 +346,6 @@ def personal_cocktail_delete(request):
 '''
 
 
-# TODO: - I need the username from GET
-#       - for POST, server needs to check if the user added the review before
-#         if that's the case, the error status should be sent to prevent it
-#         and the review should not be added
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def review(request):
     if request.method == 'GET':
@@ -368,12 +365,24 @@ def review_list(request):
         cocktail_reviews = Review.objects.filter(cocktail_id=request.GET['cocktail_id'],
                                                  is_personal_cocktail=request.GET['is_personal_cocktail']) \
             .values('id', 'user_id', 'rating', 'comment')
-        return Response(data=cocktail_reviews)
+        out = []
+        for user_review in cocktail_reviews:
+            out.append({
+                'id': user_review['id'],
+                'user_id': user_review['user_id'],
+                'username': User.objects.get(id=user_review['user_id']).username,
+                'rating': user_review['rating'],
+                'comment': user_review['comment']
+            })
+        return Response(data=out)
     except Review.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 def review_add(request):
+    tmp = Review.objects.get(user_id=request.session['id'], cocktail_id=request.data['cocktail_id'])
+    if tmp:
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     data_for_serializer = {
         'user_id': request.session['id'],
         'cocktail_id': request.data['cocktail_id'],
@@ -381,7 +390,6 @@ def review_add(request):
         'rating': request.data['rating'],
         'comment': request.data['comment']
     }
-    print(data_for_serializer)
     serializer = ReviewSerializer(data=data_for_serializer)
     if serializer.is_valid():
         serializer.save()
@@ -482,7 +490,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
     }
     ingredients = {}
     for i in cocktail.ingredients.all():
-        ingredients[i.name] = CocktailIngredients.objects.filter(cocktail_id=cocktail_id).values("centiliters")[0]
+        ingredients[i.name] = CocktailIngredients.objects.get(cocktail_id=cocktail_id, ingredient_id=i.id).centiliters
     cocktail_template["ingredients"] = ingredients
     reviews = Review.objects.filter(cocktail_id=cocktail_id, is_personal_cocktail=True)
     if reviews:
@@ -733,9 +741,9 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
     json_template = []
 
     for ingredient in ingredient_list:
-        if not IngredientsList.objects.filter(name=str(ingredient)).exists():
+        ingredient_object = IngredientsList.objects.get(name=str(ingredient))
+        if not ingredient_object:
             continue
-        ingredient_object = IngredientsList.objects.filter(name=str(ingredient))[0]
         if alcoholic is None:
             cocktail_list = PersonalCocktail.objects.all()
         elif alcoholic:
