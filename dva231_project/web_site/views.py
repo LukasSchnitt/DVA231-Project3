@@ -16,6 +16,7 @@ from .serializers import *
 
 
 def home(request):
+    
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         return render(request, 'web_site/index_moderator.html')
@@ -551,7 +552,6 @@ def bookmark_list(user_id):
                 response.append(get_cocktail_from_api_by_id(row['cocktail_id']))
             else:
                 response.append(get_cocktail_from_db_by_id(row['cocktail_id']))
-        print(response)
         return Response(data=response)
     except BookmarkedCocktail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)

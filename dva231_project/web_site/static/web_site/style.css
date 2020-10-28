@@ -233,12 +233,19 @@
 
 #bookmark-btn-wrapper{
     position: absolute;
-    bottom: 0;
-    right: 0;
+    top: 0;
+    left: 2rem;
 }
 
 #bookmark-cocktail{
     color:  rgba(68, 114, 196, 1);
     font-size: 4rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+
+    margin-left: 0;
   
 }
