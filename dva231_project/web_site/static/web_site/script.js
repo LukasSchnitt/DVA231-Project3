@@ -15,6 +15,27 @@ $( document ).ready(function() {
         $("html, body").animate({scrollTop: 0}, 1000);
     });
 
+    $('#bookmark-cocktail').on('click', function(){
+
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+        $.ajax('/bookmark', 
+        {
+            method: 'POST',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                201: function() {
+                    $('#bookmark-cocktail').html('<i class="fas fa-bookmark"></i>')
+                }
+              }
+        });
+    });
+
     $('#show-reviews-btn').on('click', function(){
         $('#reviews-container').slideToggle(400);
 
@@ -196,6 +217,22 @@ $( document ).ready(function() {
 
 });
 
+function fill_bookmarked(){
+    var ingredients = 'vodka';
+    $.ajax('/cocktail', 
+    {
+        dataType: 'json', // type of response data
+        data: {'ingredients': ingredients},
+        beforeSend: function (xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+        },
+        success: function (data) {
+            fill_drink_container(data);
+            activate_cells(ingredients);
+        }
+    });
+}
+
 function fill_reviews(data){
 
     $('#review-rating-submit').rate()
@@ -215,7 +252,7 @@ function fill_reviews(data){
     $.each(data, function(i, review_obj){
         $('#reviews-from-db-container').append(
             '<div class="review-container w-100 mb-3">' + 
-                '<label class="review-username d-inline">' + 'username' + '</label>' + 
+                '<label class="review-username d-inline">' + review_obj.username + '</label>' + 
                 '<div class="review-text-wrapper w-100">' + 
                     '<div class="rating review-rating" id="' + review_obj.id +'"></div>' +
                     '<p>' + review_obj.comment + '</p>' + 

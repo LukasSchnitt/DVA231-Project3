@@ -20,7 +20,8 @@ def home(request):
             request.session['is_logged_in'] and request.session['is_moderator']:
         return render(request, 'web_site/index_moderator.html')
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
-        return render(request, 'web_site/index_user.html', {"is_authenticated": True})
+        user_id = request.session['id']
+        return render(request, 'web_site/index_user.html', {"is_authenticated": True, "user_id": user_id})
 
     template_name = 'web_site/index.html'
     return render(request, template_name)
@@ -28,7 +29,11 @@ def home(request):
 
 def profile(request):
     template_name = 'web_site/profile.html'
-    return render(request, template_name)
+    if (not ('is_logged_in' in request.session)) or (not request.session['is_logged_in']):
+        return render(request, 'web_site/index.html')
+
+    user_id = request.session['id']
+    return render(request, template_name, {"user_id": user_id, 'is_authenticated': True})
 
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
@@ -512,7 +517,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
             @param is_personal_cocktail : boolean 
                                                 True if cocktail comes from the database
                                                 False if cocktail comes from the REST API
-            @returns HTTP STATUS 200    if cocktail has been added
+            @returns HTTP STATUS 201    if cocktail has been added
             @returns HTTP STATUS 400    if @params are not valid
         - DELETE : used to remove a cocktail from the user bookmarks
             @param cocktail_id : integer unique identifier of a cocktail

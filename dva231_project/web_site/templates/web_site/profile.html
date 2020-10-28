@@ -5,9 +5,6 @@
     <meta charset="utf-8">
 
     <title>Cocktail Search</title>
-    <meta name="description" content="The HTML5 Herald">
-    <meta name="author" content="SitePoint">
-
 
     <!-- Bootstrap & jQuery -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -18,17 +15,128 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
 
     {% load static %}
+    <link rel="stylesheet" href="{% static 'web_site/style_profile.css' %}">
     <link rel="stylesheet" href="{% static 'web_site/style.css' %}">
-    <link rel="stylesheet" href="{% static 'web_site/tagsinput.css' %}">
 
-    <script src="{% static 'web_site/script.js' %}"></script>
-    <script src="{% static 'web_site/tagsinput.js' %}"></script>
+
+    <script src="{% static 'web_site/script_profile.js' %}"></script>
+
     <script src="{% static 'web_site/rater.js' %}"></script>
 
     <meta id="token" value="{{ csrf_token }}">
+    <meta id="user_id" value="{{ user_id }}">
+
 
 </head>
 
 <body>
-    test
+    <nav class="navbar navbar-expand-lg navbar-light bg-light p-2">
+        <img src="{% static 'web_site/img/logo_sm.png' %}/" class="img-fluid logo" alt="Cocktail Search">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse ml-3" id="navbarText">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Bookmarked cocktails <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">My cocktails</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ml-auto">
+                <!-- <li class="nav-item dropdown mr-5">
+                <a class="nav-link" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i id="notification-icon" class="fas fa-bell"></i> 
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                  <a class="dropdown-item" href="#">Notification 1</a>
+                  <a class="dropdown-item" href="#">Notification 2</a>
+                  <a class="dropdown-item" href="#">Notification 3</a>
+                </div>
+              </li> -->
+              <li class="nav-item">
+                <a class="nav-link" href="#">Logout</a>
+              </li>
+          </ul>
+        </div>
+      </nav>
+
+    <div class="content m-3">
+        <div id="drinks-grid-container"></div>
+    </div>
+
+    <div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+        <meta id="selected-drink-id" value="">
+        <meta id="selected-drink-from-local-db" value="">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-body p-0">
+                <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="row">
+                    <div class="col ml-0 pl-0">
+                        <img id="cocktail-modal-img" src="">
+                    </div>
+                    <div class="col p-3 m-3">
+                        <div class="row">
+                            <div class="col">
+                                <div class="row  justify-content-center">
+                                    <h3 id="cocktail-modal-name"></h3>
+                                </div>
+                                <div class="row mb-2 justify-content-center" id="selected-drink-ranking-container">
+                                    <div class="rating" id="selected-drink-rating"></div>
+                                </div>
+                            </div>
+    
+                        </div>
+                        <div class="row justify-content-center" id="cocktail-modalingredients">
+                        </div>
+                        <div class="row mt-3">
+                            <h4>Ingredients</h4>
+                        </div>
+                        <div class="row">
+                            <ul id="drink-amounts">
+    
+                            </ul>
+                        </div>
+                        <div class="row mt-3">
+                            <h4>Recipe</h4>
+                        </div>
+                        <div class="row">
+                            <p id="drink-recipe"></p>
+                        </div>
+                    </div>
+                </div>
+    
+            </div>
+            <div class="row">
+                <div class="col text-center">
+                    <button id="show-reviews-btn" class='btn w-100'>Show reviews<i class="fas fa-chevron-down ml-2"></i></button>
+                </div>
+            </div>
+            <div class="row p-5" id="reviews-container" style="display: none;">
+    
+                <div id="reviews-from-db-container" class="w-100">
+    
+                </div>
+    
+    
+                {% if is_authenticated %}
+                <div class="review-container w-100 mb-3">
+                    <div class="w-100">
+                        <h5>Add review</h5>
+                        <div class="rating review-rating" id="review-rating-submit"></div>
+                        <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
+                        <button id="submit-review" class="btn float-right mt-2">Submit review</button>
+                    </div>
+                </div>
+                {% endif %}
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    
 </body>

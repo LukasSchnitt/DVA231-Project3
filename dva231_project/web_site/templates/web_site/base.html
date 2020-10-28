@@ -5,9 +5,6 @@
     <meta charset="utf-8">
 
     <title>Cocktail Search</title>
-    <meta name="description" content="The HTML5 Herald">
-    <meta name="author" content="SitePoint">
-
 
     <!-- Bootstrap & jQuery -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -93,10 +90,8 @@
                                 <div class="rating" id="selected-drink-rating"></div>
                             </div>
                         </div>
-
                     </div>
-                    <div class="row justify-content-center" id="cocktail-modalingredients">
-                    </div>
+                    <div class="row justify-content-center" id="cocktail-modalingredients"></div>
                     <div class="row mt-3">
                         <h4>Ingredients</h4>
                     </div>
@@ -111,6 +106,11 @@
                     <div class="row">
                         <p id="drink-recipe"></p>
                     </div>
+                    {% if is_authenticated %}
+                    <div class="row justify-content-end" id="bookmark-btn-wrapper">
+                        <button class="btn" id="bookmark-cocktail"><i class="far fa-bookmark"></i></button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

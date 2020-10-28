@@ -1,0 +1,30 @@
+.header{
+
+    width: 100%;
+    min-height: 5rem;
+    background-color: white;
+    color: black;
+
+}
+
+body{
+    background-color: rgba(68, 114, 196, 1);
+}
+
+
+.logo{
+    max-width: 6rem;
+}
+
+.left-group{
+    float: left;
+}
+
+.right-group{
+    float: right;
+}
+
+#notification-icon{
+    font-size: 2rem;
+}
+
