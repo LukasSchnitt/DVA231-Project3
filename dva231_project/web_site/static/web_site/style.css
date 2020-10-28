@@ -230,3 +230,15 @@
     background-color: rgba(68, 114, 196, 1);
     color: white;
 }
+
+#bookmark-btn-wrapper{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+#bookmark-cocktail{
+    color:  rgba(68, 114, 196, 1);
+    font-size: 4rem;
+  
+}
