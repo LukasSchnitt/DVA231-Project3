@@ -14,6 +14,15 @@ $(document).ready(function(){
     });
 
 
+    $('#bookmark-cocktail').on('click', function(){
+
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+        toggle_bookmark(id, is_personal_cocktail);
+    });
+
+
     $('#show-reviews-btn').on('click', function(){
         $('#reviews-container').slideToggle(400);
 
@@ -48,43 +57,16 @@ $(document).ready(function(){
 function fill_drink_container(data){
     $('#drinks-grid-container').empty();
 
-    data = JSON.parse(data);
+    // data = JSON.parse(data);
 
-    var data_api = data.cocktails_API;
-    var data_db = data.cocktails_DB;
-
-    if ($.isEmptyObject(data_api) && $.isEmptyObject(data_db)){
-        $('#no-drinks-info').fadeIn(200);
-        $('#show-more-btn').hide();
-    } else{
-        $('#no-drinks-info').hide();
-        $('#show-more-btn').fadeIn(200);
-    }
-
-    $.each(data_api, function(i, val) {
-        if (i%3 == 0){ $('#drinks-grid-container').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
+    $.each(data, function(i, val) {
+        if (i%2 == 0){ $('#drinks-grid-container').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
         $('.drinks-row-holder').last().append(
            '<div class="col-lg mt-2">' + 
                 '<div class="cocktail-cell shadow" id="' + val.id +'" from-db=0>' + 
                     '<img src="' + val.picture + '">' +
                     '<div class="cocktail-cell-description">' +
                         '<p class="name">' + val.name + '</p>' +
-                        // '<div class="rating align-middle" data-rate-value=5></div>' +
-                    '</div> ' +              
-                '</div>' +
-            '</div>'
-        );
-    });
-
-    $.each(data_db, function(i, val) {
-        if (i%3 == 0){ $('#drinks-grid-container').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
-        $('.drinks-row-holder').last().append(
-           '<div class="col-lg mt-2">' + 
-                '<div class="cocktail-cell shadow" id="' + val.id +'" from-db=1>' + 
-                    '<img src="' + val.picture + '">' +
-                    '<div class="cocktail-cell-description">' +
-                        '<p class="name">' + val.name + '</p>' +
-                        // '<div class="rating align-middle" data-rate-value=5></div>' +
                     '</div> ' +              
                 '</div>' +
             '</div>'
@@ -203,3 +185,44 @@ function fill_reviews(data){
 
 }
 
+
+function toggle_bookmark(id, is_personal_cocktail){
+
+    var bookmarked = $('#bookmark-cocktail').attr('bookmarked') === "1";
+    
+    if(bookmarked){
+        $.ajax('/bookmark', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#bookmark-cocktail').html('<i class="far fa-bookmark"></i>');
+                    $('#bookmark-cocktail').attr('bookmarked', 0);
+                }
+              }
+        });
+
+    } else{
+        $.ajax('/bookmark', 
+        {
+            method: 'POST',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                201: function() {
+                    $('#bookmark-cocktail').html('<i class="fas fa-bookmark"></i>');
+                    $('#bookmark-cocktail').attr('bookmarked', '1')
+                }
+              }
+        });
+    }
+
+}

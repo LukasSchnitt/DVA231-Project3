@@ -1,5 +1,21 @@
+var bookmarked_ids = [];
+
 $( document ).ready(function() {
 
+    $.ajax('/bookmark', 
+    {
+        dataType: 'json', 
+        data: {'id': $('#user_id').attr('value')},
+        beforeSend: function (xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+        },
+        success: function (data) {
+            $.each(data, function(k, val){
+                bookmarked_ids.push(val.id);
+            })
+
+        }
+    });
     $('#login-btn').on('click', function(){
         $('#login-modal').modal('show');  // show the modal
     });
@@ -20,20 +36,7 @@ $( document ).ready(function() {
         var id = $('#selected-drink-id').attr('value');
         var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
 
-        $.ajax('/bookmark', 
-        {
-            method: 'POST',
-            dataType: 'json',
-            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
-            },
-            statusCode: {
-                201: function() {
-                    $('#bookmark-cocktail').html('<i class="fas fa-bookmark"></i>')
-                }
-              }
-        });
+        toggle_bookmark(id, is_personal_cocktail);
     });
 
     $('#show-reviews-btn').on('click', function(){
@@ -203,7 +206,7 @@ $( document ).ready(function() {
             success: function (data) {
                 $('#show-more-btn').show();
                 fill_drink_container(data);
-                activate_cells(ingredients);
+                activate_cells(ingredients, bookmarked_ids);
             }
         });
 
@@ -215,22 +218,50 @@ $( document ).ready(function() {
 
     });
 
+
+
 });
 
-function fill_bookmarked(){
-    var ingredients = 'vodka';
-    $.ajax('/cocktail', 
-    {
-        dataType: 'json', // type of response data
-        data: {'ingredients': ingredients},
-        beforeSend: function (xhr, settings) {
-            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
-        },
-        success: function (data) {
-            fill_drink_container(data);
-            activate_cells(ingredients);
-        }
-    });
+function toggle_bookmark(id, is_personal_cocktail){
+
+    var bookmarked = $('#bookmark-cocktail').attr('bookmarked') === "1";
+
+    if(bookmarked){
+        $.ajax('/bookmark', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#bookmark-cocktail').html('<i class="far fa-bookmark"></i>');
+                    $('#bookmark-cocktail').attr('bookmarked', '0');
+                }
+              }
+        });
+
+    } else{
+        $.ajax('/bookmark', 
+        {
+            method: 'POST',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                201: function() {
+                    $('#bookmark-cocktail').html('<i class="fas fa-bookmark"></i>');
+                    $('#bookmark-cocktail').attr('bookmarked', "1");
+                    bookmarked_ids.push(parseInt(id));
+                }
+              }
+        });
+    }
+
 }
 
 function fill_reviews(data){
@@ -415,7 +446,8 @@ function fill_drink_container(data){
 
 }
 
-function activate_cells(ingredients){
+function activate_cells(ingredients, bookmarked_ids){
+
     $('.cocktail-cell').on('click', function(){
         $('#cocktail-modalingredients').empty();
         $('#drink-amounts').empty();
@@ -423,6 +455,7 @@ function activate_cells(ingredients){
         $('#show-reviews-btn').html('Show reviews<i class="fas fa-chevron-down ml-2">');
         // this handles clicking on cocktail to get more information
         var id = $(this).attr('id');
+        var bookmarked = bookmarked_ids.includes(parseInt(id));
 
         $('#selected-drink-id').attr('value', id);
         $('#selected-drink-from-local-db').attr('value', $(this).attr('from-db'));
@@ -430,17 +463,26 @@ function activate_cells(ingredients){
 
         $('#cocktail-modal-img').attr('src', $(this).find('img').attr('src'));  // set the image
         $('#cocktail-modal-name').text($(this).find('.name').text())  // set the title
-        get_cocktail_details(id.substring(), ingredients);
+
+        get_cocktail_details(id.substring(), ingredients, bookmarked);
         $('#cocktail-modal').modal('show');  // show the modal
     })
 }
 
-function get_cocktail_details(id, query_ingredients){
+function get_cocktail_details(id, query_ingredients, bookmarked){
+
+    $('#bookmark-cocktail').html('<i class="far fa-bookmark"></i>');
+    $('#bookmark-cocktail').attr('bookmarked', "0")
 
     $('#selected-drink-rating').remove();
     $('#selected-drink-ranking-container').append(
         '<div class="rating" id="selected-drink-rating"></div>'
     );
+
+    if (bookmarked){
+        $('#bookmark-cocktail').html('<i class="fas fa-bookmark"></i>');
+        $('#bookmark-cocktail').attr('bookmarked', "1")
+    }
 
     $.ajax('/cocktail', 
     {
@@ -496,4 +538,6 @@ function get_cocktail_details(id, query_ingredients){
 
         }
     });
+
+    
 }
