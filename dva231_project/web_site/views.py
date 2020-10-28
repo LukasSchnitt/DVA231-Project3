@@ -16,7 +16,6 @@ from .serializers import *
 
 
 def home(request):
-    
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         return render(request, 'web_site/index_moderator.html')
@@ -186,16 +185,16 @@ def personal_cocktail_add(request):
     serializer = PersonalCocktailSerializer(data=data_for_serializer)
     if serializer.is_valid():
         serializer.save()
-        cocktail_id = PersonalCocktail.object.get(user_id=request.session['id'], name=request.data['name'],
-                                                  description=request.data['description'], picture=img_url,
-                                                  recipe=request.data['recipe']).id
+        cocktail_id = PersonalCocktail.objects.get(user_id=request.session['id'], name=request.data['name'],
+                                                   description=request.data['description'], picture=img_url,
+                                                   recipe=request.data['recipe']).id
         for ingredient in request.data['ingredients']:
             result, ingredient_id = personal_cocktail_add_ingredient(ingredient['name'])
             if result == status.HTTP_200_OK:
                 result = personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id,
                                                                       ingredient['centiliters'])
             if result == status.HTTP_400_BAD_REQUEST:
-                cocktail = PersonalCocktail.get(id=cocktail_id)
+                cocktail = PersonalCocktail.objects.get(id=cocktail_id)
                 cocktail.delete()
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         result = personal_cocktail_add_image(request.session['id'], img_url, request.data['img'])
@@ -386,9 +385,13 @@ def review_list(request):
 
 
 def review_add(request):
-    tmp = Review.objects.get(user_id=request.session['id'], cocktail_id=request.data['cocktail_id'])
-    if tmp:
+    try:
+        Review.objects.get(user_id=request.session['id'], cocktail_id=request.data['cocktail_id'])
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    except Review.DoesNotExist:
+        pass
+    if request.data['rating'] > 5 or request.data['rating']<0:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     data_for_serializer = {
         'user_id': request.session['id'],
         'cocktail_id': request.data['cocktail_id'],
@@ -408,6 +411,8 @@ def review_edit(request):
         user_review = Review.objects.get(id=request.data['id'], user_id=request.session['id'])
         changed = False
         if 'rating' in request.data:
+            if request.data['rating'] > 5 or request.data['rating'] < 0:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             user_review.rating = request.data['rating']
             changed = True
         if 'comment' in request.data:
