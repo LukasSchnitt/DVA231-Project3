@@ -545,14 +545,13 @@ def bookmark_list(user_id):
     try:
         user_bookmarks = BookmarkedCocktail.objects.filter(user_id=user_id) \
             .values('cocktail_id', 'is_personal_cocktail')
-        response = {}
-        index = 0
+        response = []
         for row in user_bookmarks:
-            if row['is_personal_cocktail']:
-                response[index] = get_cocktail_from_api_by_id(row['cocktail_id'])
+            if not row['is_personal_cocktail']:
+                response.append(get_cocktail_from_api_by_id(row['cocktail_id']))
             else:
-                response[index] = get_cocktail_from_db_by_id(row['cocktail_id'])
-            index += 1
+                response.append(get_cocktail_from_db_by_id(row['cocktail_id']))
+        print(response)
         return Response(data=response)
     except BookmarkedCocktail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
