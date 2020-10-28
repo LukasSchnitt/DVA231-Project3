@@ -36,18 +36,10 @@ class NotifyCocktail(models.Model):
 
 
 class Review(models.Model):
-    class RatingValue(models.IntegerChoices):
-        SUPER_BAD = 0
-        BAD = 1
-        OK = 2
-        GOOD = 3
-        AWESOME = 4
-        PERFECT = 5
-
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     cocktail_id = models.IntegerField()
     is_personal_cocktail = models.BooleanField(default=True)
-    rating = models.IntegerField(default=RatingValue.PERFECT, choices=RatingValue.choices)
+    rating = models.FloatField()
     comment = models.CharField(max_length=500)
 
 
