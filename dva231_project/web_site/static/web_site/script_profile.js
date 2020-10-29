@@ -104,7 +104,7 @@ function fill_drink_container(data){
         if (i%2 == 0){ $('#drinks-grid-container-bookmarked').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
         $('.drinks-row-holder').last().append(
            '<div class="col-lg mt-2">' + 
-                '<div class="cocktail-cell shadow" id="' + val.id +'" from-db=0>' + 
+                '<div class="cocktail-cell shadow" id="' + val.id +'" from-db="' + val.is_personal_cocktail + '">' +
                     '<img src="' + val.picture + '">' +
                     '<div class="cocktail-cell-description">' +
                         '<p class="name">' + val.name + '</p>' +
@@ -244,6 +244,8 @@ function toggle_bookmark(id, is_personal_cocktail){
                 200: function() {
                     $('#bookmark-cocktail').html('<i class="far fa-bookmark"></i>');
                     $('#bookmark-cocktail').attr('bookmarked', 0);
+                    $('.modal').toggle();
+                    location.reload(); //TO DO
                 }
               }
         });

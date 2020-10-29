@@ -389,7 +389,11 @@ def review_add(request):
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     except Review.DoesNotExist:
         pass
+<<<<<<< HEAD
     if float(request.data['rating']) > 5 or float(request.data['rating'])<0:
+=======
+    if float(request.data['rating']) > 5 or float(request.data['rating']) < 0:
+>>>>>>> main
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data_for_serializer = {
         'user_id': request.session['id'],
@@ -463,7 +467,8 @@ def get_cocktail_from_api_by_id(cocktail_id):
         "name": cocktail_data["strDrink"],
         "picture": cocktail_data["strDrinkThumb"],
         "id": cocktail_id,
-        "recipe": cocktail_data["strInstructions"]
+        "recipe": cocktail_data["strInstructions"],
+        'is_personal_cocktail': 0
     }
     ingredients = {}
     for i in range(15):
@@ -496,7 +501,8 @@ def get_cocktail_from_db_by_id(cocktail_id):
         "recipe": cocktail.recipe,
         "description": cocktail.description,
         "username": cocktail.user_id.username,
-        "user_id": cocktail.user_id.id
+        "user_id": cocktail.user_id.id,
+        'is_personal_cocktail': 1
     }
     ingredients = {}
     for i in cocktail.ingredients.all():
