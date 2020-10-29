@@ -390,7 +390,7 @@ def review_add(request):
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     except Review.DoesNotExist:
         pass
-    if request.data['rating'] > 5 or request.data['rating'] < 0:
+    if float(request.data['rating']) > 5 or float(request.data['rating'])<0:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data_for_serializer = {
         'user_id': request.session['id'],
