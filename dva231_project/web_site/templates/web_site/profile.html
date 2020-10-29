@@ -38,10 +38,12 @@
         <div class="collapse navbar-collapse ml-3" id="navbarText">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#">Bookmarked cocktails <span class="sr-only">(current)</span></a>
+              <button class="nav-link  btn" href="" id="bookmarked-cocktails-btn">
+                Bookmarked cocktails
+              </button>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">My cocktails</a>
+              <button class="nav-link btn" href="" id="my-cocktails-btn">My cocktails</button>
             </li>
           </ul>
           <ul class="navbar-nav ml-auto">
@@ -56,14 +58,21 @@
                 </div>
               </li> -->
               <li class="nav-item">
-                <a class="nav-link" href="#">Logout</a>
+                <button class="nav-link btn" id="logout-btn">Logout</button>
               </li>
           </ul>
         </div>
       </nav>
 
     <div class="content m-3">
-        <div id="drinks-grid-container" class="mt-0 mr-5 ml-5"></div>
+        <div id="drinks-grid-container-bookmarked" class="mt-0 mr-5 ml-5">
+          <h2>No cocktails bookmarked yet :(</h2>
+        </div>
+        <div id="drinks-grid-container-own" class="mt-0 mr-5 ml-5" style="display: none;">
+          <h2 class="">No cocktails added yet</h2>
+          <button class="btn" id="add-cocktail-btn"><i class="fas fa-plus-circle"></i></button>
+        </div>
+
     </div>
 
     <div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">

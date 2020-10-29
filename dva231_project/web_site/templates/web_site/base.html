@@ -130,12 +130,13 @@
 
 
             {% if is_authenticated %}
-            <div class="review-container w-100 mb-3">
+            <div class="review-container w-100 mb-3" id="new-review-container">
                 <div class="w-100">
                     <h5>Add review</h5>
                     <div class="rating review-rating" id="review-rating-submit"></div>
                     <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
                     <button id="submit-review" class="btn float-right mt-2">Submit review</button>
+                    <button id="edit-review" class="btn float-right mt-2" style="display: none;">Edit review</button>
                 </div>
             </div>
             {% endif %}

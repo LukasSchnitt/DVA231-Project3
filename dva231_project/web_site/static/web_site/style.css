@@ -6,6 +6,11 @@
     max-width: 20rem;
 }
 
+.btn:focus{
+    outline: none;
+    box-shadow: none;
+}
+
 .sub-logo{
     max-width: 10rem;
 }
@@ -226,7 +231,7 @@
     min-height: 10rem;
 }
 
-#submit-review{
+#submit-review, #edit-review{
     background-color: rgba(68, 114, 196, 1);
     color: white;
 }

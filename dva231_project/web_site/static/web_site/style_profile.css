@@ -28,3 +28,14 @@ body{
     font-size: 2rem;
 }
 
+#add-cocktail-btn{
+    color: rgba(255, 255, 255, 1);
+    font-size: 6rem;
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+#add-cocktail-btn:hover{
+    color: rgba(255, 255, 255, 0.8);
+}
