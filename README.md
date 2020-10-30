@@ -34,13 +34,13 @@ https://www.overleaf.com/1797835368hrpqhpqzpfhs
 
 - Frontend: [Nancy](https://github.com/Nanny26), [Ernest](github.com/erno98)
 
-  - Display-Page: both
+  - Display-Page: Ernest
 
-  - Login-Page: both
+  - Login-Page: Ernest
 
-  - Profile-Page: both
+  - Profile-Page: Nancy
   
-  - Cocktail-Page (with Picture, Ingredients, Description, Recipe, average of votes and Comments)
+  - Cocktail-Page (with Picture, Ingredients, Description, Recipe, average of votes and Comments): Ernest
 
 
 #### Working-Steps:
