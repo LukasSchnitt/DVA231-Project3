@@ -187,11 +187,11 @@ def personal_cocktail_add(request):
         cocktail_id = PersonalCocktail.objects.get(user_id=request.session['id'], name=request.data['name'],
                                                    description=request.data['description'], picture=img_url,
                                                    recipe=request.data['recipe']).id
-        for ingredient in request.data['ingredients']:
-            result, ingredient_id = personal_cocktail_add_ingredient(ingredient['name'])
+        for ingredient, amount in eval(request.data['ingredients']).items():
+            result, ingredient_id = personal_cocktail_add_ingredient(ingredient)
             if result == status.HTTP_200_OK:
                 result = personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id,
-                                                                      ingredient['centiliters'])
+                                                                      amount)
             if result == status.HTTP_400_BAD_REQUEST:
                 cocktail = PersonalCocktail.objects.get(id=cocktail_id)
                 cocktail.delete()
@@ -389,11 +389,7 @@ def review_add(request):
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     except Review.DoesNotExist:
         pass
-<<<<<<< HEAD
     if float(request.data['rating']) > 5 or float(request.data['rating'])<0:
-=======
-    if float(request.data['rating']) > 5 or float(request.data['rating']) < 0:
->>>>>>> main
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data_for_serializer = {
         'user_id': request.session['id'],

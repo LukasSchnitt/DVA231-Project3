@@ -96,6 +96,18 @@ $( document ).ready(function() {
                         statusCode: {
                             200: function(data) {
                                 fill_reviews(data);
+                                $('#selected-drink-rating').remove();
+                                $('#selected-drink-ranking-container').append(
+                                    '<div class="rating" id="selected-drink-rating"></div>'
+                                );
+                                var review_rating = 0;
+
+                                $('#reviews-from-db-container').find('.review-rating').each(function(){
+                                    review_rating += $(this).rate("getValue");
+                                });
+                                var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                                $('#selected-drink-rating').rate();
+                                $('#selected-drink-rating').rate("setValue", review_rating/review_no);
                             }
                           }
                     });
@@ -112,8 +124,8 @@ $( document ).ready(function() {
         var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
 
         // review_obj.user_id == $('#user_id').attr('value')
-        var review_id = $('.review-user-id').filter(function(){
-            return $(this).attr('value') == $('#user_id').attr('value')
+        var review_id = $('.review-id').filter(function(){
+            return $(this).parent().find('.review-user-id').attr('value') == $('#user_id').attr('value')
         }).attr('value')
 
         $.ajax('/review', 
@@ -131,6 +143,33 @@ $( document ).ready(function() {
             statusCode: {
                 200: function() {
                     $('#new-review-container').slideUp(200);
+                    $.ajax('/review', 
+                    {
+                        method: 'GET',
+                        dataType: 'json',
+                        data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+                        },
+                        statusCode: {
+                            200: function(data) {
+                                fill_reviews(data);
+                                $('#selected-drink-rating').remove();
+                                $('#selected-drink-ranking-container').append(
+                                    '<div class="rating" id="selected-drink-rating"></div>'
+                                );
+                                var review_rating = 0;
+
+                                $('#reviews-from-db-container').find('.review-rating').each(function(){
+                                    review_rating += $(this).rate("getValue");
+                                });
+                                var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                                $('#selected-drink-rating').rate();
+                                $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+
+                            }
+                          }
+                    });
                 }
               }
         });
@@ -329,6 +368,7 @@ function fill_reviews(data){
 
     $('#reviews-from-db-container').empty();
 
+
     $('#new-review-container').show();
     $.each(data, function(i, review_obj){
         var edit_button = '';
@@ -339,7 +379,7 @@ function fill_reviews(data){
 
         $('#reviews-from-db-container').append(
             '<div class="review-container w-100 mb-3">' + 
-                '<meta class="review-id" value=' + review_obj.id + "/>" +
+                '<meta class="review-id" value=' + review_obj.id + ">" +
                 '<meta class="review-user-id" value=' + review_obj.user_id + ">" +
                 '<label class="review-username d-inline">' + review_obj.username + '</label>' + 
                 edit_button + 

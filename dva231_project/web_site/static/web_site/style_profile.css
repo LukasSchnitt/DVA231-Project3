@@ -39,3 +39,16 @@ body{
 #add-cocktail-btn:hover{
     color: rgba(255, 255, 255, 0.8);
 }
+
+/* .ingredient-input-label{
+    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(68, 114, 196, 1);
+    border-radius: .5rem;
+    padding: .5rem;
+} */
+
+#add-ingredient-field, #submit-cocktail-btn{
+    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(68, 114, 196, 1);
+}
+
