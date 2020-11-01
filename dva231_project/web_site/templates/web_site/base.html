@@ -24,6 +24,9 @@
 
     <meta id="token" value="{{ csrf_token }}">
     <meta id="user_id" value="{{ user_id }}">
+    {% if is_moderator %}
+    <meta id="is_moderator" value="{{ is_moderator }}">
+    {% endif %}
 
 </head>
 
@@ -60,9 +63,9 @@
         <div id="drinks-grid-container" style="display: none;">
         </div>
 
-        <div class="col text-center mt-1 mb-3">
+        <!-- <div class="col text-center mt-1 mb-3">
             <button id="show-more-btn" class="btn" style="display: none;">Show more results</button>
-        </div>
+        </div> -->
 
         <button id="scroll-up" class='btn' style="display: none;"><i class="fas fa-chevron-up"></i></button>
 

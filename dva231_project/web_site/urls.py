@@ -5,6 +5,7 @@ from django.urls import path
 urlpatterns = [
     path('', views.home),
     path('profile', views.profile),
+    path('mod', views.mod),
     path('bookmark', views.bookmark),
     path('cocktail', views.cocktail_API, name='urlname'),
     path('notifications', views.notifications),
