@@ -14,6 +14,7 @@ body{
 
 .logo{
     max-width: 6rem;
+    cursor: pointer;
 }
 
 .left-group{

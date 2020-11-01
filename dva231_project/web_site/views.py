@@ -18,7 +18,8 @@ from .serializers import *
 def home(request):
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
-        return render(request, 'web_site/index_moderator.html')
+        user_id = request.session['id']
+        return render(request, 'web_site/index_moderator.html', {"is_authenticated": True, "user_id": user_id, 'is_moderator': True})
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         user_id = request.session['id']
         return render(request, 'web_site/index_user.html', {"is_authenticated": True, "user_id": user_id})
@@ -33,8 +34,13 @@ def profile(request):
         return render(request, 'web_site/index.html')
 
     user_id = request.session['id']
-    return render(request, template_name, {"user_id": user_id, 'is_authenticated': True})
+    return render(request, template_name, {"user_id": user_id, 
+                                            'is_authenticated': True, 
+                                            'is_moderator': 'is_moderator' in request.session and request.session['is_moderator']})
 
+def mod(request):
+    template_name = 'web_site/mod.html'
+    return render(request, template_name)
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def cocktail_API(request):

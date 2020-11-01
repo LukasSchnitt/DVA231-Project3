@@ -236,6 +236,11 @@
     color: white;
 }
 
+#delete-review-btn{
+    color: rgb(80, 0, 0);
+    padding: 0;
+}
+
 #bookmark-btn-wrapper{
     position: absolute;
     top: 0;
