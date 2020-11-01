@@ -52,21 +52,14 @@ $(document).ready(function(){
 
     var img_bytes = "";
 
-    $('#cocktail-img').on('change', function() {
-
+    $('#cocktail-img').change(function() {
         var reader = new FileReader();
         reader.onload = function() {
-      
-          var arrayBuffer = this.result,
-            array = new Uint8Array(arrayBuffer),
-            binaryString = String.fromCharCode.apply(null, array);
-      
-            img_bytes = binaryString;
-      
+            img_bytes=reader.result;
         }
-        reader.readAsArrayBuffer(this.files[0]);
+        reader.readAsDataURL(this.files[0]);
       
-      }, false);
+      });
 
     $('#submit-cocktail-btn').on('click', function(){
 
@@ -91,16 +84,20 @@ $(document).ready(function(){
             dataType: 'json',
             data: {'name': name, 
                    'recipe': recipe, 
-                   'img': img, 
-                   'extension': extension, 
+                   'img': img,
+                   'extension': extension,
                    'description': description,
-                   'ingredients': JSON.stringify(ingredients)},
+                   'ingredients': JSON.stringify(ingredients)
+                   },
             beforeSend: function (xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
             }, 
             statusCode: {
-                200: function() {
-                  location.reload()
+                201: function() {
+                  location.reload();
+                },
+                400: function(){
+                    alert("Invalid Data");
                 }
               }
         });

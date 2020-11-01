@@ -146,6 +146,7 @@ def notifications_confirm(confirmed_notifications):
             @returns HTTP STATUS 404 if the data are not valid
 '''
 
+
 def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -181,17 +182,20 @@ def personal_cocktail_add(request):
         'picture': img_url,
         'recipe': request.data['recipe']
     }
+    print(data_for_serializer)
     serializer = PersonalCocktailSerializer(data=data_for_serializer)
     if serializer.is_valid():
+        print("in")
         serializer.save()
         cocktail_id = PersonalCocktail.objects.get(user_id=request.session['id'], name=request.data['name'],
                                                    description=request.data['description'], picture=img_url,
                                                    recipe=request.data['recipe']).id
-        for ingredient, amount in eval(request.data['ingredients']).items():
+        data = json.loads(request.data['ingredients'])
+        for ingredient in data.keys():
             result, ingredient_id = personal_cocktail_add_ingredient(ingredient)
             if result == status.HTTP_200_OK:
-                result = personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id,
-                                                                      amount)
+                result = personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id, data[ingredient])
+
             if result == status.HTTP_400_BAD_REQUEST:
                 cocktail = PersonalCocktail.objects.get(id=cocktail_id)
                 cocktail.delete()
@@ -203,7 +207,7 @@ def personal_cocktail_add(request):
 
 def personal_cocktail_add_ingredient(ingredient_name):
     try:
-        ingredient_id = IngredientsList.objects.get(name=ingredient_name)
+        ingredient_id = IngredientsList.objects.get(name=ingredient_name).id
         return status.HTTP_200_OK, ingredient_id
     except IngredientsList.DoesNotExist:
         data_for_serializer = {
@@ -212,9 +216,9 @@ def personal_cocktail_add_ingredient(ingredient_name):
         serializer = IngredientsListSerializer(data=data_for_serializer)
         if serializer.is_valid():
             serializer.save()
-            ingredient_id = IngredientsList.objects.get(name=ingredient_name)
+            ingredient_id = IngredientsList.objects.get(name=ingredient_name).id
             return status.HTTP_200_OK, ingredient_id
-    return status.HTTP_400_BAD_REQUEST
+    return status.HTTP_400_BAD_REQUEST, -1
 
 
 def personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id, ingredient_centiliters):
@@ -231,9 +235,10 @@ def personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id, ing
 
 
 def personal_cocktail_add_image(user_id, img_url, image):
-    if not os.path.isdir("static/img/cocktail/" + user_id):
-        os.mkdir("static/img/cocktail/" + user_id)
-    with open("static/img/cocktail/" + user_id + '/' + img_url, "wb") as f:
+    if not os.path.exists("web_site/static/web_site/img/cocktail/" + str(user_id)):
+        os.makedirs("web_site/static/web_site/img/cocktail/" + str(user_id))
+    with open("web_site/static/web_site/img/cocktail/" + str(user_id) + img_url, "wb") as f:
+        image = image.split(',')[1].encode()
         f.write(base64.decodebytes(image))
     return status.HTTP_201_CREATED
 
@@ -389,7 +394,7 @@ def review_add(request):
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     except Review.DoesNotExist:
         pass
-    if float(request.data['rating']) > 5 or float(request.data['rating'])<0:
+    if float(request.data['rating']) > 5 or float(request.data['rating']) < 0:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data_for_serializer = {
         'user_id': request.session['id'],
@@ -492,7 +497,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
         return []
     cocktail_template = {
         "name": cocktail.name,
-        "picture": cocktail.picture,
+        "picture": 'static/web_site/img/cocktail/'+str(cocktail.user_id.id)+cocktail.picture,
         "id": cocktail_id,
         "recipe": cocktail.recipe,
         "description": cocktail.description,
@@ -770,7 +775,7 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
             if ingredient_object in cocktail.ingredients.all():
                 cocktail_template = {
                     "name": cocktail.name,
-                    "picture": cocktail.picture,
+                    "picture": 'static/web_site/img/cocktail/'+str(cocktail.user_id.id)+cocktail.picture,
                     "id": cocktail.id,
                     "recipe": cocktail.recipe,
                     "description": cocktail.description,
