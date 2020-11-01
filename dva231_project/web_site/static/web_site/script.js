@@ -78,14 +78,98 @@ $( document ).ready(function() {
         {
             method: 'POST',
             dataType: 'json',
-            // TODO
             data: {'rating': rating, 'comment': review, 'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
             beforeSend: function (xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
             },
             statusCode: {
-                200: function() {
+                201: function() {
+                    $('#new-review-container').slideUp(200);
+                    $.ajax('/review', 
+                    {
+                        method: 'GET',
+                        dataType: 'json',
+                        data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+                        },
+                        statusCode: {
+                            200: function(data) {
+                                fill_reviews(data);
+                                $('#selected-drink-rating').remove();
+                                $('#selected-drink-ranking-container').append(
+                                    '<div class="rating" id="selected-drink-rating"></div>'
+                                );
+                                var review_rating = 0;
 
+                                $('#reviews-from-db-container').find('.review-rating').each(function(){
+                                    review_rating += $(this).rate("getValue");
+                                });
+                                var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                                $('#selected-drink-rating').rate();
+                                $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+                            }
+                          }
+                    });
+                }
+              }
+        });
+        
+    })
+
+    $('#edit-review').on('click', function(){
+        var rating = $('#review-rating-submit').rate("getValue");
+        var review = $('#add-review-text').val();
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+        // review_obj.user_id == $('#user_id').attr('value')
+        var review_id = $('.review-id').filter(function(){
+            return $(this).parent().find('.review-user-id').attr('value') == $('#user_id').attr('value')
+        }).attr('value')
+
+        $.ajax('/review', 
+        {
+            method: 'PATCH',
+            dataType: 'json',
+            data: {'id': review_id, 
+                   'rating': rating, 
+                   'comment': review, 
+                   'cocktail_id': id, 
+                   'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#new-review-container').slideUp(200);
+                    $.ajax('/review', 
+                    {
+                        method: 'GET',
+                        dataType: 'json',
+                        data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+                        },
+                        statusCode: {
+                            200: function(data) {
+                                fill_reviews(data);
+                                $('#selected-drink-rating').remove();
+                                $('#selected-drink-ranking-container').append(
+                                    '<div class="rating" id="selected-drink-rating"></div>'
+                                );
+                                var review_rating = 0;
+
+                                $('#reviews-from-db-container').find('.review-rating').each(function(){
+                                    review_rating += $(this).rate("getValue");
+                                });
+                                var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                                $('#selected-drink-rating').rate();
+                                $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+
+                            }
+                          }
+                    });
                 }
               }
         });
@@ -267,6 +351,10 @@ function toggle_bookmark(id, is_personal_cocktail){
 function fill_reviews(data){
 
     $('#review-rating-submit').rate()
+    $('#submit-review').show();
+    $('#edit-review').hide();
+
+    $('#add-review-text').val('')
 
     var options = {
         max_value: 5,
@@ -280,10 +368,21 @@ function fill_reviews(data){
 
     $('#reviews-from-db-container').empty();
 
+
+    $('#new-review-container').show();
     $.each(data, function(i, review_obj){
+        var edit_button = '';
+        if (review_obj.user_id == $('#user_id').attr('value')){
+            $('#new-review-container').hide();
+            edit_button = "<button id='edit-review-btn' class='btn'>Edit review</button>"
+        }
+
         $('#reviews-from-db-container').append(
             '<div class="review-container w-100 mb-3">' + 
+                '<meta class="review-id" value=' + review_obj.id + ">" +
+                '<meta class="review-user-id" value=' + review_obj.user_id + ">" +
                 '<label class="review-username d-inline">' + review_obj.username + '</label>' + 
+                edit_button + 
                 '<div class="review-text-wrapper w-100">' + 
                     '<div class="rating review-rating" id="' + review_obj.id +'"></div>' +
                     '<p>' + review_obj.comment + '</p>' + 
@@ -292,6 +391,13 @@ function fill_reviews(data){
         );
         options.initial_value = review_obj.rating;
         $('#' + review_obj.id).rate(options);
+    })
+
+    $('#edit-review-btn').on('click', function(){
+        $('#add-review-text').val($(this).parent().find('p').text())
+        $('#submit-review').hide();
+        $('#edit-review').show();
+        $('#new-review-container').show();
     })
 
 }

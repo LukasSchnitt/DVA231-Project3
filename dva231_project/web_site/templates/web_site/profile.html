@@ -17,9 +17,11 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'web_site/style_profile.css' %}">
     <link rel="stylesheet" href="{% static 'web_site/style.css' %}">
-
+    <link rel="stylesheet" href="{% static 'web_site/tagsinput.css' %}">
 
     <script src="{% static 'web_site/script_profile.js' %}"></script>
+    <script src="{% static 'web_site/tagsinput.js' %}"></script>
+
 
     <script src="{% static 'web_site/rater.js' %}"></script>
 
@@ -38,10 +40,12 @@
         <div class="collapse navbar-collapse ml-3" id="navbarText">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#">Bookmarked cocktails <span class="sr-only">(current)</span></a>
+              <button class="nav-link  btn" href="" id="bookmarked-cocktails-btn">
+                Bookmarked cocktails
+              </button>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">My cocktails</a>
+              <button class="nav-link btn" href="" id="my-cocktails-btn">My cocktails</button>
             </li>
           </ul>
           <ul class="navbar-nav ml-auto">
@@ -56,14 +60,19 @@
                 </div>
               </li> -->
               <li class="nav-item">
-                <a class="nav-link" href="#">Logout</a>
+                <button class="nav-link btn" id="logout-btn">Logout</button>
               </li>
           </ul>
         </div>
       </nav>
 
     <div class="content m-3">
-        <div id="drinks-grid-container" class="mt-0 mr-5 ml-5"></div>
+        <div id="drinks-grid-container-bookmarked" class="mt-0 mr-5 ml-5">
+        </div>
+        <div id="drinks-grid-container-own" class="mt-0 mr-5 ml-5" style="display: none;">
+          <button class="btn" id="add-cocktail-btn"><i class="fas fa-plus-circle"></i></button>
+        </div>
+
     </div>
 
     <div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
@@ -128,12 +137,13 @@
     
     
                 {% if is_authenticated %}
-                <div class="review-container w-100 mb-3">
+                <div class="review-container w-100 mb-3" id="new-review-container">
                     <div class="w-100">
                         <h5>Add review</h5>
                         <div class="rating review-rating" id="review-rating-submit"></div>
                         <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
                         <button id="submit-review" class="btn float-right mt-2">Submit review</button>
+                        <button id="edit-review" class="btn float-right mt-2" style="display: none;">Edit review</button>
                     </div>
                 </div>
                 {% endif %}
@@ -142,5 +152,105 @@
           </div>
         </div>
       </div>
+
+
+  <div class="modal fade" id="add-cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+            <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="row justify-content-center mt-5">
+                <img src="{% static 'web_site/img/logo.png' %}/" class="img-fluid sub-logo" alt="Cocktail Search">
+            </div>
+            <div class="row justify-content-center mt-3 mb-3">
+                <div class="col title-box text-center p-1 shadow">
+                    <h2>Add a new cocktail</h2>
+                </div>
+                
+            </div>
+            <div class="row justify-content-center mt-2">
+                <div class="col-lg text-center">
+                  <label for="new-cocktail-name">Cocktail name</label>
+                  <input type="text" class="form-control ml-3 mr-3" id="new-cocktail-name">   
+                </div>
+                <div class="col-lg text-center align-self-end mr-5">
+                  <div class="input-group">
+                    <div class="custom-file">
+                      <input type="file" class="custom-file-input" id="cocktail-img" accept=".jpg, .jpeg, .png">
+                      <label class="custom-file-label" for="cocktail-img">Choose cocktail image</label>
+                    </div>
+                  </div>
+                 </div>
+
+
+                <div class="row w-100 mt-3">
+                  <div id="ingredients-container" class="col-xl">
+                    <div class="row m-2 mb-0">
+                      <div class="col text-center ingredient-input-label">
+                        <p class="m-0">Ingredient</p>
+                      </div>
+                      <div class="col-1"></div>
+                      <div class="col text-center ingredient-input-label">
+                        <p class="m-0">Amount [cl]</p>
+                      </div>
+                    </div>
+                    <div id="ingredient-input-wrapper">
+                      <div class="row m-2 ingredient-row">
+                        <div class="col">
+                          <input type="text" class="form-control w-100 ingredient-name">
+                        </div>
+                        <div class="col-1"></div>
+                        <div class="col">
+                          <input type="number" class="form-control w-100 ingredient-amount">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row m-4">
+                      <button id="add-ingredient-field" class="btn col"><i class="fas fa-plus"></i> Add another ingredient</button>
+                    </div>
+                </div>
+
+                <textarea type="text" class="form-control col-xl mr-5" id="new-cocktail-recipe" placeholder="Enter recipe here..."></textarea>
+
+              </div>
+
+
+                <button class="btn w-100 ml-5 mr-5 mt-3 mb-4" id="submit-cocktail-btn">Submit cocktail</button>
+
+                <div class="row w-100 justify-content-center">
+                    <div class="mb-4"  id="missing-inputs-registration-label" style="display:none;">
+                        <h5 class="invalid-input">Please fill the missing elements.</h5>
+                    </div>
+                </div>
+
+                <div class="row w-100 justify-content-center"  id="register-404" style="display:none;">
+                    <div class="mb-4">
+                        <h5 class="invalid-input">Something went wrong, please try again.</h5>
+                    </div>
+                </div>
+
+                <div class="row w-100 justify-content-center"  id="registration-success" style="display:none;">
+                    <div class="mb-4">
+                        <h5 class="success-input">Cocktail added succesfully!</h5>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
     
+    <div  id="ingredient-row-template" style="display: none;">
+      <div class="row m-2 ingredient-row">
+        <div class="col">
+          <input type="text" class="form-control w-100 ingredient-name">
+        </div>
+        <div class="col-1"></div>
+        <div class="col">
+          <input type="number" class="form-control w-100 ingredient-amount">
+        </div>
+      </div>
+    </div>
 </body>
