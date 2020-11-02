@@ -53,3 +53,17 @@ body{
     background-color: rgba(68, 114, 196, 1);
 }
 
+#delete-personal-cocktail-btn{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(236, 67, 67, 0.6);
+    color: white;
+    transition: .3s;
+}
+
+#delete-personal-cocktail-btn:hover{
+    background-color: rgba(236, 67, 67, 0.9);
+    color: white;
+
+}

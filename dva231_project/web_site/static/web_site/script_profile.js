@@ -65,6 +65,26 @@ $(document).ready(function(){
       
       });
 
+    $('#delete-personal-cocktail-btn').on('click', function(){
+        var id = $('#selected-drink-id').attr('value');
+
+        $.ajax('/cocktail', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'id': id},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            }, 
+            statusCode: {
+                200: function() {
+                  $('#' + id).hide();
+                  $('#cocktail-modal').modal("hide");
+                }
+              }
+        });
+    });
+
     $('#submit-cocktail-btn').on('click', function(){
 
         if (!check_new_cocktail_input()){
