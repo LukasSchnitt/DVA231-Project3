@@ -111,6 +111,21 @@ class NotifyCocktailSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.cocktail_id = validated_data.get('cocktail_id', instance.cocktail_id)
-        instance.confirmed = validated_data.get('confirmed', instance.ingredient_id)
+        instance.confirmed = validated_data.get('confirmed', instance.confirmed)
+        instance.save()
+        return instance
+
+
+class CocktailBlacklistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CocktailBlacklist
+        fields = ['cocktail_id', 'is_personal_cocktail']
+
+    def create(self, validated_data):
+        return CocktailBlacklist.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.cocktail_id = validated_data.get('cocktail_id', instance.cocktail_id)
+        instance.is_personal_cocktail = validated_data.get('is_personal_cocktail', instance.is_personal_cocktail)
         instance.save()
         return instance
