@@ -22,11 +22,15 @@
     <script src="{% static 'web_site/script_profile.js' %}"></script>
     <script src="{% static 'web_site/tagsinput.js' %}"></script>
 
-
+    {% if request.session.is_moderator %}
+    <script src="{% static 'web_site/js/moderator_profile.js' %}"></script>
+    <script src="{% static 'web_site/js/moderator_index.js' %}"></script>
+    {% endif %}
     <script src="{% static 'web_site/rater.js' %}"></script>
 
     <meta id="token" value="{{ csrf_token }}">
     <meta id="user_id" value="{{ user_id }}">
+
 
 
 </head>
@@ -47,11 +51,16 @@
             <li class="nav-item">
               <button class="nav-link btn" href="" id="my-cocktails-btn">My cocktails</button>
             </li>
+            {% if request.session.is_moderator %}
+            <li>
+                <button class="nav-link btn" href="" id="ban-user-btn">Ban User</button>
+            </li>
+            {% endif %}
           </ul>
           <ul class="navbar-nav ml-auto">
                 <!-- <li class="nav-item dropdown mr-5">
                 <a class="nav-link" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <i id="notification-icon" class="fas fa-bell"></i> 
+                  <i id="notification-icon" class="fas fa-bell"></i>
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                   <a class="dropdown-item" href="#">Notification 1</a>
@@ -67,94 +76,97 @@
       </nav>
 
     <div class="content m-3">
-        <div id="drinks-grid-container-bookmarked" class="mt-0 mr-5 ml-5">
-        </div>
+        <div id="drinks-grid-container-bookmarked" class="mt-0 mr-5 ml-5"></div>
         <div id="drinks-grid-container-own" class="mt-0 mr-5 ml-5" style="display: none;">
           <button class="btn" id="add-cocktail-btn"><i class="fas fa-plus-circle"></i></button>
         </div>
-
     </div>
 
     <div class="modal fade" id="cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
-        <meta id="selected-drink-id" value="">
-        <meta id="selected-drink-from-local-db" value="">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-body p-0">
-                <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <div class="row">
-                    <div class="col ml-0 pl-0">
-                        <img id="cocktail-modal-img" src="">
-                    </div>
-                    <div class="row justify-content-end" id="bookmark-btn-wrapper">
-                      <button class="btn" id="bookmark-cocktail" bookmarked="1"><i class="fas fa-bookmark"></i></button>
-                  </div>
-                    <div class="col p-3 m-3">
-                        <div class="row">
-                            <div class="col">
-                                <div class="row  justify-content-center">
-                                    <h3 id="cocktail-modal-name"></h3>
-                                </div>
-                                <div class="row mb-2 justify-content-center" id="selected-drink-ranking-container">
-                                    <div class="rating" id="selected-drink-rating"></div>
-                                </div>
-                            </div>
-    
-                        </div>
-                        <div class="row justify-content-center" id="cocktail-modalingredients">
-                        </div>
-                        <div class="row mt-3">
-                            <h4>Ingredients</h4>
-                        </div>
-                        <div class="row">
-                            <ul id="drink-amounts">
-    
-                            </ul>
-                        </div>
-                        <div class="row mt-3">
-                            <h4>Recipe</h4>
-                        </div>
-                        <div class="row">
-                            <p id="drink-recipe"></p>
-                        </div>
-
-                    </div>
-                </div>
-    
-            </div>
+    <meta id="selected-drink-id" value="">
+    <meta id="selected-drink-from-local-db" value="">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+            <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
             <div class="row">
-                <div class="col text-center">
-                    <button id="show-reviews-btn" class='btn w-100'>Show reviews<i class="fas fa-chevron-down ml-2"></i></button>
+                <div class="col ml-0 pl-0">
+                    <img id="cocktail-modal-img" src="">
                 </div>
-            </div>
-            <div class="row p-5" id="reviews-container" style="display: none;">
-    
-                <div id="reviews-from-db-container" class="w-100">
-    
+                <div class="row justify-content-end" id="bookmark-btn-wrapper">
+                  <button class="btn" id="bookmark-cocktail" bookmarked="1"><i class="fas fa-bookmark"></i></button>
                 </div>
-    
-    
-                {% if is_authenticated %}
-                <div class="review-container w-100 mb-3" id="new-review-container">
-                    <div class="w-100">
-                        <h5>Add review</h5>
-                        <div class="rating review-rating" id="review-rating-submit"></div>
-                        <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
-                        <button id="submit-review" class="btn float-right mt-2">Submit review</button>
-                        <button id="edit-review" class="btn float-right mt-2" style="display: none;">Edit review</button>
-                    </div>
+                {% if request.session.is_moderator %}
+                <div>
+                  <button class="btn" id="delete-cocktail"><i class="fa fa-ban"></i></button>
                 </div>
                 {% endif %}
-    
+                <div class="col p-3 m-3">
+                    <div class="row">
+                        <div class="col">
+                            <div class="row  justify-content-center">
+                                <h3 id="cocktail-modal-name"></h3>
+                            </div>
+                            <div class="row mb-2 justify-content-center" id="selected-drink-ranking-container">
+                                <div class="rating" id="selected-drink-rating"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row justify-content-center" id="cocktail-modalingredients">
+                    </div>
+                    <div class="row mt-3">
+                        <h4>Ingredients</h4>
+                    </div>
+                    <div class="row">
+                        <ul id="drink-amounts">
+
+                        </ul>
+                    </div>
+                    <div class="row mt-3">
+                        <h4>Recipe</h4>
+                    </div>
+                    <div class="row">
+                        <p id="drink-recipe"></p>
+                    </div>
+
+                </div>
             </div>
-          </div>
+
+        </div>
+        <div class="row">
+            <div class="col text-center">
+                <button id="show-reviews-btn" class='btn w-100'>Show reviews<i class="fas fa-chevron-down ml-2"></i></button>
+            </div>
+        </div>
+        <div class="row p-5" id="reviews-container" style="display: none;">
+
+            <div id="reviews-from-db-container" class="w-100">
+
+            </div>
+
+
+            {% if is_authenticated %}
+            <div class="review-container w-100 mb-3" id="new-review-container">
+                <div class="w-100">
+                    <h5>Add review</h5>
+                    <div class="rating review-rating" id="review-rating-submit"></div>
+                    <textarea type="text" id="add-review-text" placeholder="Input your review..." class="form-control w-100"></textarea>
+                    <button id="submit-review" class="btn float-right mt-2">Submit review</button>
+                    <button id="edit-review" class="btn float-right mt-2" style="display: none;">Edit review</button>
+                </div>
+            </div>
+            {% endif %}
+
         </div>
       </div>
+    </div>
+  </div>
 
 
-  <div class="modal fade" id="add-cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal fade" id="add-cocktail-modal" tabindex="-1" role="dialog"  aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-body p-0">
@@ -168,12 +180,12 @@
                 <div class="col title-box text-center p-1 shadow">
                     <h2>Add a new cocktail</h2>
                 </div>
-                
+
             </div>
             <div class="row justify-content-center mt-2">
                 <div class="col-lg text-center">
                   <label for="new-cocktail-name">Cocktail name</label>
-                  <input type="text" class="form-control ml-3 mr-3" id="new-cocktail-name">   
+                  <input type="text" class="form-control ml-3 mr-3" id="new-cocktail-name">
                 </div>
                 <div class="col-lg text-center align-self-end mr-5">
                   <div class="input-group">
@@ -203,7 +215,7 @@
                         </div>
                         <div class="col-1"></div>
                         <div class="col">
-                          <input type="number" class="form-control w-100 ingredient-amount">
+                          <input type="number" class="form-control w-100 ingredient-amount" step="0.5">
                         </div>
                       </div>
                     </div>
@@ -241,8 +253,7 @@
             </div>
         </div>
     </div>
-    
-    <div  id="ingredient-row-template" style="display: none;">
+        <div  id="ingredient-row-template" style="display: none;">
       <div class="row m-2 ingredient-row">
         <div class="col">
           <input type="text" class="form-control w-100 ingredient-name">
@@ -253,4 +264,34 @@
         </div>
       </div>
     </div>
+    </div>
+    </div>
+    {% if request.session.is_moderator %}
+    <div class="modal fade" id="ban-user-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-body p-0">
+                <button type="button" class="close pr-1" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="row justify-content-center mt-5">
+                    <img src="{% static 'web_site/img/logo.png' %}/" class="img-fluid sub-logo" alt="Cocktail Search">
+                </div>
+                <div class="row justify-content-center mt-3 mb-3">
+                    <div class="col title-box text-center p-1 shadow">
+                        <h2>Ban/Unban a user</h2>
+                    </div>
+                </div>
+                <div class=""> <!-- TODO when text is inserted here, the dropdown has to appear -->
+                    <input type="text" placeholder="Username of the user to remove" id="ban-username-input" />
+                    <input type="submit" value="Ban/Unban the selected user" id="ban-confirm-btn">
+                </div>
+                <div class="dropdown" id="ban-users-list">
+                    <!--TODO it have to be a dropdown like the one of the lab-->
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    {% endif %}
 </body>

@@ -374,7 +374,10 @@ function fill_reviews(data){
         var edit_button = '';
         if (review_obj.user_id == $('#user_id').attr('value')){
             $('#new-review-container').hide();
-            edit_button = "<button id='edit-review-btn' class='btn'>Edit review</button>"
+            edit_button = "<button id='edit-review-btn' class='btn'>Edit review</button>" +
+                            "<button id='delete-review-btn' class='btn'>Delete review</button>";
+        } else if ($('#is_moderator').attr('value') === "True"){
+            edit_button = "<button id='delete-review-btn-mod' class=' ml-2 btn'>Delete review</button>";
         }
 
         $('#reviews-from-db-container').append(
@@ -399,6 +402,79 @@ function fill_reviews(data){
         $('#edit-review').show();
         $('#new-review-container').show();
     })
+
+    $('#delete-review-btn-mod').on('click', function(){
+
+        var review_id = $('.review-id').filter(function(){
+            return $(this).parent().find('.review-user-id').attr('value') == $('#user_id').attr('value')
+        }).attr('value')
+
+        $.ajax('/review', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'review_id': review_id},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#selected-drink-rating').remove();
+                    $('#selected-drink-ranking-container').append(
+                        '<div class="rating" id="selected-drink-rating"></div>'
+                    );
+                    $('#' + review_id).parent().parent().empty();
+                    $('#new-review-container').slideDown(400);
+                    var review_rating = 0;
+
+                    $('#reviews-from-db-container').find('.review-rating').each(function(){
+                        review_rating += $(this).rate("getValue");
+                    });
+                    var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                    $('#selected-drink-rating').rate();
+                    $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+                }
+            }
+        })
+        
+    });
+
+    $('#delete-review-btn').on('click', function(){
+
+        var review_id = $('.review-id').filter(function(){
+            return $(this).parent().find('.review-user-id').attr('value') == $('#user_id').attr('value')
+        }).attr('value')
+
+        $.ajax('/review', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'id': review_id},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#selected-drink-rating').remove();
+                    $('#selected-drink-ranking-container').append(
+                        '<div class="rating" id="selected-drink-rating"></div>'
+                    );
+                    $('#' + review_id).parent().parent().empty();
+                    $('#new-review-container').slideDown(400);
+                    var review_rating = 0;
+
+                    $('#reviews-from-db-container').find('.review-rating').each(function(){
+                        review_rating += $(this).rate("getValue");
+                    });
+                    var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                    $('#selected-drink-rating').rate();
+                    $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+                }
+            }
+        })
+        
+    });
+
 
 }
 

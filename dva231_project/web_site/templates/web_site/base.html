@@ -21,9 +21,14 @@
     <script src="{% static 'web_site/script.js' %}"></script>
     <script src="{% static 'web_site/tagsinput.js' %}"></script>
     <script src="{% static 'web_site/rater.js' %}"></script>
-
+    {% if is_moderator %}
+    <script type="text/javascript" src="{% static 'web_site/js/moderator_index.js' %}"></script>
+    {% endif %}
     <meta id="token" value="{{ csrf_token }}">
     <meta id="user_id" value="{{ user_id }}">
+    {% if is_moderator %}
+    <meta id="is_moderator" value="{{ is_moderator }}">
+    {% endif %}
 
 </head>
 
@@ -60,9 +65,9 @@
         <div id="drinks-grid-container" style="display: none;">
         </div>
 
-        <div class="col text-center mt-1 mb-3">
+        <!-- <div class="col text-center mt-1 mb-3">
             <button id="show-more-btn" class="btn" style="display: none;">Show more results</button>
-        </div>
+        </div> -->
 
         <button id="scroll-up" class='btn' style="display: none;"><i class="fas fa-chevron-up"></i></button>
 
@@ -84,6 +89,11 @@
                 {% if is_authenticated %}
                 <div class="row justify-content-end" id="bookmark-btn-wrapper">
                     <button class="btn" id="bookmark-cocktail" bookmarked="0"><i class="far fa-bookmark"></i></button>
+                </div>
+                {% endif %}
+                {% if is_moderator %}
+                <div>
+                    <button class="btn" id="delete-cocktail"><i class="fa fa-ban"></i></button>
                 </div>
                 {% endif %}
                 <div class="col p-3 m-3">

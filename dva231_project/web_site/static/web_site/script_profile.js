@@ -1,6 +1,11 @@
 
 $(document).ready(function(){
-    fill('/bookmark');
+    fill('/bookmark', $('#drinks-grid-container-bookmarked'));
+    fill('/cocktail', $('#drinks-grid-container-own'));
+
+    $('.logo').on('click', function(){
+        document.location.href="/";
+    });
 
     document.querySelector('.custom-file-input').addEventListener('change',function(e){
         var fileName = document.getElementById("cocktail-img").files[0].name;
@@ -30,7 +35,6 @@ $(document).ready(function(){
         $('#drinks-grid-container-bookmarked').slideUp(400)
         remove_active();
         $(this).parent().addClass('active');
-        fill('/cocktail');
         $('#drinks-grid-container-own').slideDown(400)
 
     });
@@ -156,6 +160,36 @@ $(document).ready(function(){
         
     })
 
+    
+    $('#show-reviews-btn').on('click', function(){
+        $('#reviews-container').slideToggle(400);
+
+        $(this).text()==='Show reviews' ? 
+            $(this).html('Hide reviews<i class="fas fa-chevron-up ml-2">') : 
+            $(this).html('Show reviews<i class="fas fa-chevron-down ml-2">');
+       
+    
+        var id = $('#selected-drink-id').attr('value');
+        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
+
+        $.ajax('/review', 
+        {
+            method: 'GET',
+            dataType: 'json',
+            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function(data) {
+                    fill_reviews(data);
+                }
+              }
+        });
+
+    });
+
+
     $('#edit-review').on('click', function(){
         var rating = $('#review-rating-submit').rate("getValue");
         var review = $('#add-review-text').val();
@@ -237,7 +271,7 @@ function remove_active(){
     });
 }
 
-function fill(url){
+function fill(url, container){
     $.ajax(url, 
     {
         dataType: 'json', 
@@ -246,7 +280,7 @@ function fill(url){
             xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
         },
         success: function (data) {
-            fill_drink_container(data);
+            fill_drink_container(data, container);
             activate_cells();
         }
     });
@@ -261,42 +295,20 @@ function fill(url){
     });
 
 
-    $('#show-reviews-btn').on('click', function(){
-        $('#reviews-container').slideToggle(400);
-
-        $(this).text()==='Show reviews' ? 
-            $(this).html('Hide reviews<i class="fas fa-chevron-up ml-2">') : 
-            $(this).html('Show reviews<i class="fas fa-chevron-down ml-2">');
-       
-    
-        var id = $('#selected-drink-id').attr('value');
-        var is_personal_cocktail = $('#selected-drink-from-local-db').attr('value');
-
-        $.ajax('/review', 
-        {
-            method: 'GET',
-            dataType: 'json',
-            data: {'cocktail_id': id, 'is_personal_cocktail': is_personal_cocktail},
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
-            },
-            statusCode: {
-                200: function(data) {
-                    fill_reviews(data);
-                }
-              }
-        });
-
-    });
 
 }
 
-function fill_drink_container(data){
+function fill_drink_container(data, container){
     // data = JSON.parse(data);
 
+    if (data.hasOwnProperty("user_cocktails")){
+        data = data.user_cocktails;
+    }
+
+
     $.each(data, function(i, val) {
-        if (i%2 == 0){ $('#drinks-grid-container-bookmarked').append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
-        $('.drinks-row-holder').last().append(
+        if (i%2 == 0){ container.append('<div class="row d-inline-flex mb-4 drinks-row-holder"></div>');}
+        container.find('.drinks-row-holder').last().append(
            '<div class="col-lg mt-2">' + 
                 '<div class="cocktail-cell shadow" id="' + val.id +'" from-db="' + val.is_personal_cocktail + '">' +
                     '<img src="' + val.picture + '">' +
@@ -413,7 +425,8 @@ function fill_reviews(data){
         var edit_button = '';
         if (review_obj.user_id == $('#user_id').attr('value')){
             $('#new-review-container').hide();
-            edit_button = "<button id='edit-review-btn' class='btn'>Edit review</button>"
+            edit_button = "<button id='edit-review-btn' class='btn'>Edit review</button>" + 
+                          "<button id='delete-review-btn' class='btn'>Delete review</button>"
         }
 
         $('#reviews-from-db-container').append(
@@ -438,6 +451,42 @@ function fill_reviews(data){
         $('#edit-review').show();
         $('#new-review-container').show();
     })
+
+    $('#delete-review-btn').on('click', function(){
+
+        var review_id = $('.review-id').filter(function(){
+            return $(this).parent().find('.review-user-id').attr('value') == $('#user_id').attr('value')
+        }).attr('value')
+
+        $.ajax('/review', 
+        {
+            method: 'DELETE',
+            dataType: 'json',
+            data: {'id': review_id},
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('#token').attr('value'));
+            },
+            statusCode: {
+                200: function() {
+                    $('#selected-drink-rating').remove();
+                    $('#selected-drink-ranking-container').append(
+                        '<div class="rating" id="selected-drink-rating"></div>'
+                    );
+                    $('#' + review_id).parent().parent().empty();
+                    $('#new-review-container').slideDown(400);
+                    var review_rating = 0;
+
+                    $('#reviews-from-db-container').find('.review-rating').each(function(){
+                        review_rating += $(this).rate("getValue");
+                    });
+                    var review_no = $('#reviews-from-db-container').find('.review-rating').length;
+                    $('#selected-drink-rating').rate();
+                    $('#selected-drink-rating').rate("setValue", review_rating/review_no);
+                }
+            }
+        })
+        
+    });
 
 }
 
