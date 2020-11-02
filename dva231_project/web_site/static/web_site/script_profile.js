@@ -302,7 +302,6 @@ function fill_drink_container(data, container){
     // data = JSON.parse(data);
 
     if (data.hasOwnProperty("user_cocktails")){
-        console.log(data)
         data = data.user_cocktails;
     }
 

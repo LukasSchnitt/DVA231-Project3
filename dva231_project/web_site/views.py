@@ -19,7 +19,8 @@ def home(request):
     if 'is_logged_in' in request.session and 'is_moderator' in request.session and \
             request.session['is_logged_in'] and request.session['is_moderator']:
         user_id = request.session['id']
-        return render(request, 'web_site/index_moderator.html', {"is_authenticated": True, "user_id": user_id, 'is_moderator': True})
+        return render(request, 'web_site/index_moderator.html',
+                      {"is_authenticated": True, "user_id": user_id, 'is_moderator': True})
     elif 'is_logged_in' in request.session and request.session['is_logged_in']:
         user_id = request.session['id']
         return render(request, 'web_site/index_user.html', {"is_authenticated": True, "user_id": user_id})
@@ -34,13 +35,16 @@ def profile(request):
         return render(request, 'web_site/index.html')
 
     user_id = request.session['id']
-    return render(request, template_name, {"user_id": user_id, 
-                                            'is_authenticated': True, 
-                                            'is_moderator': 'is_moderator' in request.session and request.session['is_moderator']})
+    return render(request, template_name, {"user_id": user_id,
+                                           'is_authenticated': True,
+                                           'is_moderator': 'is_moderator' in request.session and request.session[
+                                               'is_moderator']})
+
 
 def mod(request):
     template_name = 'web_site/mod.html'
     return render(request, template_name)
+
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 def cocktail_API(request):
@@ -268,7 +272,7 @@ def personal_cocktail_edit(request):
             os.remove("static/img/cocktail/" + request.session['id'] + '/' + cocktail_to_edit.picture)
             now = datetime.now()
             img_url = str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute) + \
-                str(now.second) + str(now.microsecond) + request.data['extension']
+                      str(now.second) + str(now.microsecond) + request.data['extension']
             personal_cocktail_add_image(request.session['id'], img_url, request.data['img'])
             cocktail_to_edit.picture = img_url
         if 'ingredients' in request.data:
@@ -291,9 +295,24 @@ def personal_cocktail_edit(request):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+def ban_cocktail(cocktail_id):
+    data_for_serializer = {
+        "cocktail_id": cocktail_id,
+        "is_personal_cocktail": False
+    }
+    serializer = CocktailBlacklistSerializer(data=data_for_serializer)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 def personal_cocktail_delete(request):
     try:
-        if 'is_moderator' in request.session and request.session['is_moderator'] and 'cocktail_id' in request.data:
+        if 'is_moderator' in request.session and request.session['is_moderator'] \
+                and 'cocktail_id' in request.data and 'is_personal_cocktail' in request.data:
+            if not bool(int(request.data['is_personal_cocktail'])):
+                return ban_cocktail(request.data['cocktail_id'])
             user_cocktail = PersonalCocktail.objects.get(id=request.data['cocktail_id'])
             user_cocktail.blacklisted = not user_cocktail.blacklisted
             if user_cocktail.blacklisted:
@@ -503,7 +522,7 @@ def get_cocktail_from_db_by_id(cocktail_id):
         return []
     cocktail_template = {
         "name": cocktail.name,
-        "picture": 'static/web_site/img/cocktail/'+str(cocktail.user_id.id)+cocktail.picture,
+        "picture": 'static/web_site/img/cocktail/' + str(cocktail.user_id.id) + cocktail.picture,
         "id": cocktail_id,
         "recipe": cocktail.recipe,
         "description": cocktail.description,
@@ -781,7 +800,7 @@ def get_cocktail_from_DB_by_ingredients(ingredient_list, alcoholic):
             if ingredient_object in cocktail.ingredients.all():
                 cocktail_template = {
                     "name": cocktail.name,
-                    "picture": 'static/web_site/img/cocktail/'+str(cocktail.user_id.id)+cocktail.picture,
+                    "picture": 'static/web_site/img/cocktail/' + str(cocktail.user_id.id) + cocktail.picture,
                     "id": cocktail.id,
                     "recipe": cocktail.recipe,
                     "description": cocktail.description,

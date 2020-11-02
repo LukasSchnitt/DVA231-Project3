@@ -55,7 +55,7 @@ $(function(){
                     $("#ban-users-list").show();
                 },
                 401: function(){
-                    window.reload();
+                    location.reload();
                 }
             }
         });
