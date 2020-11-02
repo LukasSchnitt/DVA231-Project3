@@ -32,13 +32,13 @@ https://www.overleaf.com/1797835368hrpqhpqzpfhs
   - Moderators Login System: Francesco
 
 
-- Frontend: [Nancy](https://github.com/Nanny26), [Ernest](github.com/erno98)
+- Frontend: [Ernest](github.com/erno98)
 
   - Display-Page: Ernest
 
   - Login-Page: Ernest
 
-  - Profile-Page: Nancy
+  - Profile-Page: Ernest
   
   - Cocktail-Page (with Picture, Ingredients, Description, Recipe, average of votes and Comments): Ernest
 
