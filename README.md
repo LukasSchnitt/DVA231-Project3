@@ -1,9 +1,6 @@
 # DVA231 Project Group 3
 ## Project Web-Development
 
-### Link to the Overleaf documentation
-https://www.overleaf.com/1797835368hrpqhpqzpfhs
-
 #### Project Idea: Cocktail DB
  - Website for Queries like “Which Cocktail can I make with these ingredients?”
   
