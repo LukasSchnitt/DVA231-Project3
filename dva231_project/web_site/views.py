@@ -82,7 +82,12 @@ def notifications(request):
         return notifications_confirm(request.data['notifications'])
     return Response(status=status.HTTP_409_CONFLICT)
 
-
+'''
+    This function checks for a specififc user, which Personal-Cocktails of him are blacklisted and therefore 
+    he should be informed about the cocktails in the front-end
+    Input: User-ID
+    Output: List of Cocktail which are the user get Notified about, because they are Blacklisted
+'''
 def notifications_list(user_id):
     cocktail_list = user_cocktails(user_id)
     out = []
@@ -97,6 +102,12 @@ def notifications_list(user_id):
             })
     return Response(data=out)
 
+'''
+    This function confirmed the given notification from a user and saved the confirmation of that in the Database,
+    so that the System "knows" that the User got the notification
+    Input: List of notifications
+    Output: Status code for correct work of function
+'''
 
 def notifications_confirm(confirmed_notifications):
     for notification in confirmed_notifications:
@@ -156,6 +167,17 @@ def notifications_confirm(confirmed_notifications):
             @returns HTTP STATUS 404 if the data are not valid
 '''
 
+'''
+    This function check for the method which will be executed in terms of the Personal Cocktail
+    Options are: List the Personal-Cocktails, Add a Personal Cocktail, edit a Personal-Cocktail and delete a Personal Cocktail.
+    Its only possible for User who are Logged in.
+    Input: Request which contain Booled for checking if a user is logged in and either depending on the Request-Method:
+        GET: User-ID for identifying the Users-Cocktail
+        POST: User-ID, Name of Cocktail, Recipe, Image and list of ingredients for adding a Personal-Cocktail
+        PATCH: Cocktail-ID for identifying the editing Cocktail, Name, Recipe, Image and list of ingredients for editing existing Cocktail
+        DELETE: Cocktail-ID for identifying the deleting Cocktail        
+    Output: Statuscode for checking if the performed action was sucessful
+'''
 
 def personal_cocktail(request):
     if not ('is_logged_in' in request.session and request.session['is_logged_in']):
@@ -168,7 +190,11 @@ def personal_cocktail(request):
         return personal_cocktail_edit(request)
     elif request.method == 'DELETE':
         return personal_cocktail_delete(request)
-
+'''
+    This function returns a list of Cocktails, if the user is not a moderator (empty list then)
+    Input: User-ID in request
+    Output: List of Cocktails which the user creates
+'''
 
 def personal_cocktail_list(request):
     try:
@@ -180,6 +206,11 @@ def personal_cocktail_list(request):
     except PersonalCocktail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+'''
+    This function checks add a Cocktail to the Database for a specific user
+    Input: User-ID, Name, Recipe, Image and Ingredient-List for adding a Cocktial
+    Output: Statuscode if the adding-process was sucessful or not
+'''
 
 def personal_cocktail_add(request):
     now = datetime.now()
@@ -214,6 +245,11 @@ def personal_cocktail_add(request):
         return Response(status=result)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
+'''
+    This function adds a specific ingredient to the Ingredient-Table in the Database
+    Input: ingredientname
+    Output: Statuscode if the Process of adding a new ingredient was sucessful or not
+'''
 
 def personal_cocktail_add_ingredient(ingredient_name):
     try:
@@ -230,6 +266,11 @@ def personal_cocktail_add_ingredient(ingredient_name):
             return status.HTTP_200_OK, ingredient_id
     return status.HTTP_400_BAD_REQUEST, -1
 
+'''
+    This function adds a many-to-many-relation between a Cocktail and a specific Ingredient including the measurement of it
+    Input: ingredient-id, cocktail-id and ingredient_centiliters
+    Output: Statuscode if the Process of adding a new ingredient to a Cocktail was sucessful or not
+'''
 
 def personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id, ingredient_centiliters):
     data_for_serializer = {
@@ -243,6 +284,11 @@ def personal_cocktail_add_ingredient_to_cocktail(cocktail_id, ingredient_id, ing
         return status.HTTP_200_OK
     return status.HTTP_400_BAD_REQUEST
 
+'''
+    This function adds a image for a specific Cocktial to the database
+    Input: user-id, img-url, image
+    Output: Statuscode if the Process of adding a new image to the directory was sucessful or not
+'''
 
 def personal_cocktail_add_image(user_id, img_url, image):
     if not os.path.exists("web_site/static/web_site/img/cocktail/" + str(user_id)):
@@ -252,6 +298,11 @@ def personal_cocktail_add_image(user_id, img_url, image):
         f.write(base64.decodebytes(image))
     return status.HTTP_201_CREATED
 
+'''
+    This function edit the properties of an existing Cocktail in the Database
+    Input: User-Id, Cocktail-ID, Name, Recipe, image and List of Ingredients
+    Output: Statuscode if the Process of editing the Cocktail was sucessful or not
+'''
 
 def personal_cocktail_edit(request):
     try:
@@ -294,6 +345,11 @@ def personal_cocktail_edit(request):
     except PersonalCocktail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+'''
+    This function adds a banned Cocktail to the Database-Table Blacklisted-Cocktails
+    Input: Cocktial-ID
+    Output: Statuscode if the Process of banning the Cocktail was sucessful or not
+'''
 
 def ban_cocktail(cocktail_id):
     data_for_serializer = {
@@ -306,6 +362,11 @@ def ban_cocktail(cocktail_id):
         return Response(status=status.HTTP_200_OK)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
+'''
+    This function deletes a specific Cocktial from the Database-Table and sends a notification to the user
+    Input: Cocktail-ID, User-ID
+    Output: Statuscode if the Process of deleting the Cocktail was sucessful or not
+'''
 
 def personal_cocktail_delete(request):
     try:
@@ -393,6 +454,12 @@ def review(request):
     elif request.method == 'DELETE':
         return review_delete(request)
 
+'''
+    This function returns a list of all existing reviews regarding to a specific Cocktial
+    Input: Cocktial-ID, Boolean if it is a personal-cocktial or not
+    Output: List of all regarding Review-Objects for a specific Cocktail and a Statuscode for checking if the process
+    was sucessful or not
+'''
 
 def review_list(request):
     try:
@@ -412,6 +479,11 @@ def review_list(request):
     except Review.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+'''
+    This function adds a specific ingredient to the Ingredient-Table in the Database
+    Input: ingredientname
+    Output: Statuscode if the Process of adding a new ingredient was sucessful or not
+'''
 
 def review_add(request):
     try:
